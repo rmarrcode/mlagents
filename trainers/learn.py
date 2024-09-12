@@ -5,6 +5,7 @@ import yaml
 import os
 import numpy as np
 import json
+import wandb 
 
 from typing import Callable, Optional, List
 
@@ -196,6 +197,10 @@ def create_environment_factory(
 
 
 def run_cli(options: RunOptions) -> None:
+    wandb.init(
+        project='visibility-game',
+        config = {}
+    )
     try:
         print(
             """

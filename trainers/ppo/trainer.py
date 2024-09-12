@@ -58,6 +58,40 @@ class PPOTrainer(RLTrainer):
         self.seed = seed
         self.policy: Policy = None  # type: ignore
 
+    def _record_networks(self):
+            policy_data = {}
+            value_data = {}
+            states = [torch.tensor([[0.5 + i, 0.5, 0.5 + j] for i in range(10) for j in range(10)])]
+            # actions = AgentAction(continuous_tensor=torch.tensor([]), 
+            #                       discrete_list=[torch.tensor([0,1,2,3,4] * 100)])
+            actions = AgentAction(continuous_tensor=torch.tensor([]), 
+                                discrete_list=[torch.tensor([])])     
+            act_masks = torch.full((100, 5), 1)
+            policy_data['states'] = states[0].tolist()
+            log_probs, entropy = self.optimizer.policy.evaluate_actions(
+                states,
+                masks=act_masks,
+                actions=actions,
+                memories=[],
+                seq_len=1
+            )
+            policy_data['log_probs'] = log_probs.all_discrete_tensor.tolist()
+            policy_data['entropy'] = entropy.tolist()
+
+            value_data['states'] = states[0].tolist()
+            values = self.optimizer.critic.critic_pass(
+                states,
+                memories=[],
+                sequence_length=1
+            )
+            t = values[0]['extrinsic']
+            value_data['values'] = values[0]['extrinsic'].tolist()
+            base_path = 'C:\\Users\\rmarr\\Documents\\python-envs\\3.7.0\\Lib\\site-packages\\mlagents\\network_data'
+            with open(f'{base_path}\\policy.json', 'w') as file:
+                json.dump(policy_data, file, indent=4)
+            with open(f'{base_path}\\value.json', 'w') as file:
+                json.dump(value_data, file, indent=4)    
+
     def _process_trajectory(self, trajectory: Trajectory) -> None:
         """
         Takes a trajectory and processes it, putting it into the update buffer.

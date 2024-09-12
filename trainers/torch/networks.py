@@ -2,6 +2,10 @@ from typing import Callable, List, Dict, Tuple, Optional, Union
 import abc
 
 from mlagents.torch_utils import torch, nn
+import torch.nn as nn
+import torch.nn.functional as F
+import torch.optim as optim
+import wandb
 
 from mlagents_envs.base_env import ActionSpec, ObservationSpec, ObservationType
 from mlagents.trainers.torch.action_model import ActionModel
@@ -471,9 +475,38 @@ class ValueNetwork(nn.Module, Critic):
         else:
             encoding_size = network_settings.hidden_units
         self.value_heads = ValueHeads(stream_names, encoding_size, outputs_per_stream)
+        self.informed_init()
 
     def update_normalization(self, buffer: AgentBuffer) -> None:
         self.network_body.update_normalization(buffer)
+
+    def informed_init(self):            
+        opt = optim.Adam(list(self.network_body.parameters()) + list(self.value_heads.parameters()), lr=0.0001)
+        locations = []
+        for i in range(10):
+            for j in range(10):
+                locations.append([0.5+i, 0.5, 0.5+j])
+        high_val_locations = [
+            [1.5, .5, 3.5],
+            [1.5, .5, 4.5],
+            [1.5, .5, 5.5],
+            [1.5, .5, 6.5],
+            [1.5, .5, 7.5],
+            [1.5, .5, 8.5],
+            [1.5, .5, 9.5]
+        ]
+        template = torch.tensor([int(location in high_val_locations) * 10 for location in locations], dtype=torch.float32, requires_grad=False)
+        locations_tensor = [torch.tensor(locations)]
+        for i in range(10000):
+            encoding, memories = self.network_body(locations_tensor, None, None, 100)
+            output = self.value_heads(encoding)
+            opt.zero_grad()
+            loss = F.mse_loss(template, output['extrinsic'])
+            wandb.log({
+                'informed_init_loss': loss
+            })
+            loss.backward()
+            opt.step()
 
     @property
     def memory_size(self) -> int:
@@ -501,6 +534,7 @@ class ValueNetwork(nn.Module, Critic):
             inputs, actions, memories, sequence_length
         )
         output = self.value_heads(encoding)
+        output
         return output, memories
 
 
