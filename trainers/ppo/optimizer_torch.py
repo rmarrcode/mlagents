@@ -76,6 +76,9 @@ class TorchPPOOptimizer(TorchOptimizer):
     def critic(self):
         return self._critic
 
+    def informed_init_critic(self):
+        self._critic.informed_init()
+
     @timed
     def update(self, batch: AgentBuffer, num_sequences: int) -> Dict[str, float]:
         """

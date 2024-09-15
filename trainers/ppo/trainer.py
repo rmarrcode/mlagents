@@ -291,6 +291,9 @@ class PPOTrainer(RLTrainer):
         self.policies[parsed_behavior_id.behavior_id] = policy
 
         self.optimizer = self.create_ppo_optimizer()
+        # TODO make better
+        if parsed_behavior_id.behavior_id == 'Seeker?team=1':
+            self.optimizer.informed_init_critic()
         for _reward_signal in self.optimizer.reward_signals.keys():
             self.collected_rewards[_reward_signal] = defaultdict(lambda: 0)
 

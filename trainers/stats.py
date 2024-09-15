@@ -13,6 +13,7 @@ from mlagents_envs.logging_util import get_logger
 from mlagents_envs.timers import set_gauge
 from torch.utils.tensorboard import SummaryWriter
 from mlagents.torch_utils.globals import get_rank
+import wandb
 
 logger = get_logger(__name__)
 
@@ -195,6 +196,7 @@ class ConsoleWriter(StatsWriter):
             log_info.append("No episode was completed since last summary")
             log_info.append(is_training)
         logger.info(". ".join(log_info) + ".")
+        wandb.log({category : elo_stats.mean})
 
     def add_property(
         self, category: str, property_type: StatsPropertyType, value: Any
