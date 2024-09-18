@@ -1,0 +1,21 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug MLAgents Learn",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "C:\\Users\\rmarr\\Documents\\python-envs\\3.7.0\\Scripts\\mlagents-learn.exe",
+            "console": "integratedTerminal",
+            "args": [
+                "C:\\Users\\rmarr\\Documents\\visibility-game\\Assets\\ryan_was_here\\config\\hide-and-seek.yaml", 
+                "--force"
+            ],
+            "env": {
+                "PYTHONPATH": "C:\\Users\\rmarr\\Documents\\python-envs\\3.7.0\\Lib\\site-packages"
+            },
+            "cwd": "C:\\Users\\rmarr\\Documents\\visibility-game",
+            "justMyCode": false
+        }
+    ]
+}
