@@ -39,6 +39,7 @@ class TorchPPOOptimizer(TorchOptimizer):
             )
             self._critic.to(default_device())
 
+
         params = list(self.policy.actor.parameters()) + list(self._critic.parameters())
         self.hyperparameters: PPOSettings = cast(
             PPOSettings, trainer_settings.hyperparameters
