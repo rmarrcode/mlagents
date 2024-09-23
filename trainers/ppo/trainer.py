@@ -6,6 +6,8 @@ from collections import defaultdict
 from typing import cast
 
 import numpy as np
+import torch
+import json
 
 from mlagents_envs.logging_util import get_logger
 from mlagents_envs.base_env import BehaviorSpec
@@ -17,6 +19,7 @@ from mlagents.trainers.ppo.optimizer_torch import TorchPPOOptimizer
 from mlagents.trainers.trajectory import Trajectory
 from mlagents.trainers.behavior_id_utils import BehaviorIdentifiers
 from mlagents.trainers.settings import TrainerSettings, PPOSettings
+from mlagents.trainers.torch.agent_action import AgentAction
 
 logger = get_logger(__name__)
 
@@ -91,6 +94,7 @@ class PPOTrainer(RLTrainer):
                 json.dump(policy_data, file, indent=4)
             with open(f'{base_path}\\value.json', 'w') as file:
                 json.dump(value_data, file, indent=4)    
+
 
     def _process_trajectory(self, trajectory: Trajectory) -> None:
         """
@@ -293,7 +297,8 @@ class PPOTrainer(RLTrainer):
         self.optimizer = self.create_ppo_optimizer()
         # TODO make better
         if parsed_behavior_id.behavior_id == 'Seeker?team=1':
-            self.optimizer.informed_init_actor()
+            pass
+            #self.optimizer.informed_init_actor()
             #self.optimizer.informed_init_critic()
         for _reward_signal in self.optimizer.reward_signals.keys():
             self.collected_rewards[_reward_signal] = defaultdict(lambda: 0)
