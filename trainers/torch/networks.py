@@ -760,98 +760,8 @@ class SimpleActor(nn.Module, Actor):
         return tuple(export_out)
 
     def informed_init(self):
-        # high_val_locations = [
-        #     [9.5, 0.5, 9.5],
-        #     [9.5, 0.5, 8.5],
-        #     [9.5, 0.5, 7.5],
-        #     [9.5, 0.5, 6.5],
-        #     [9.5, 0.5, 5.5],
-        #     [9.5, 0.5, 4.5],
-        #     [9.5, 0.5, 3.5],
-        #     [9.5, 0.5, 2.5],
-        #     [9.5, 0.5, 1.5],
-        #     [9.5, 0.5, .5],
-
-        #     [8.5, 0.5, .5],
-        #     [8.5, 0.5, .5],
-        #     [7.5, 0.5, .5],
-        #     [6.5, 0.5, .5],
-        #     [5.5, 0.5, .5],
-        #     [4.5, 0.5, .5],
-        #     [3.5, 0.5, .5],
-        #     [2.5, 0.5, .5],
-        #     [1.5, 0.5, .5],
-        #     [0.5, 0.5, .5],
-
-        #     [8.5, 0.5, .5],
-        #     [8.5, 0.5, 1.5],
-        #     [7.5, 0.5, 2.5],
-        #     [6.5, 0.5, 3.5],
-        #     [5.5, 0.5, 4.5],
-        #     [4.5, 0.5, 5.5],
-        #     [3.5, 0.5, 6.5],
-        #     [2.5, 0.5, 7.5],
-        #     [1.5, 0.5, 8.5],
-        #     [0.5, 0.5, 9.5]
-        # ]
-        # high_value_corresponding_actions = [
-        #     [3],
-        #     [3],
-        #     [3],
-        #     [3],
-        #     [3],
-        #     [3],
-        #     [3],
-        #     [3],
-        #     [3],
-        #     [3],
-
-        #     [2],
-        #     [2],
-        #     [2],
-        #     [2],
-        #     [2],
-        #     [2],
-        #     [2],
-        #     [2],
-        #     [2],
-        #     [2],
-
-        #     [4],
-        #     [4],            
-        #     [4],
-        #     [4],
-        #     [4],            
-        #     [4],
-        #     [4],
-        #     [4],            
-        #     [4],
-        #     [4]
-        # ]
-        
-        # masks = torch.tensor([1, 1, 1, 1, 1]).repeat(100, 1)
-        # _locations = []
-        # template = torch.tensor([.2] * 5, dtype=torch.float32, requires_grad=False).repeat(100, 1)
-
-        # next_action = 0
-        # it = 0
-        # map_vals = {}
-        # for i in range(10):
-        #     for j in range(10):
-        #         cur_state = [0.5+i, 0.5, 0.5+j]
-        #         _locations.append(cur_state)
-        #         key = f'{cur_state[0]}-{cur_state[1]}-{cur_state[2]}'
-        #         if cur_state in high_val_locations:
-        #             map_vals[key] = high_value_corresponding_actions[next_action][0]
-        #             next_action = next_action + 1
-        #         else:
-        #             map_vals[key] = -1
-        #         it = it + 1
-        # import json 
-        # with open ('C:\\Users\\rmarr\\Documents\\python-envs\\3.7.0\Lib\\site-packages\\mlagents\\map_vals\\map_vals.json', 'w') as f:
-        #     json.dump(map_vals, f)
         opt = optim.Adam(list(self.network_body.parameters()) + list(self.action_model.parameters()), lr=0.0001)
-        PATH_TO_MAP_VALS = 'C:\\Users\\rmarr\\Documents\\python-envs\\3.7.0\Lib\\site-packages\\mlagents\\map_vals\\map_vals.json'
+        PATH_TO_MAP_VALS = 'C:\\Users\\rmarr\\Documents\\python-envs\\.mlagents\\Lib\\site-packages\\mlagents\\map_vals\\map_vals.json'
         with open(PATH_TO_MAP_VALS, 'r') as f:
             map_vals = json.load(f)
         masks = torch.tensor([1, 1, 1, 1, 1]).repeat(100, 1)
@@ -861,19 +771,25 @@ class SimpleActor(nn.Module, Actor):
         all_locations = [torch.tensor([list(map(float, s.split('-'))) for s in map_vals.keys()])]
 
         print('informed init actor...')  
-        for i in range(10000):
-            encoding, memories_out = self.network_body(
-                all_locations, memories=[], sequence_length=1
-            )
-            probs = self.action_model._get_dists(encoding, masks)
-            probs = probs.discrete[0].probs 
-            
-            loss = F.mse_loss(probs, template)
-            wandb.log({
-                'informed_init_loss_actor': loss
-            })
-            loss.backward()
-            opt.step()
+        print(f'another line')
+        for i in range(1000):
+            for j in range(50):
+                times = torch.full((all_locations[0].shape[0],), j)
+                state = torch.cat((all_locations[0], times.unsqueeze(1)), dim=1)
+                print(state)
+                encoding, memories_out = self.network_body(
+                    [state], memories=[], sequence_length=1
+                )
+                probs = self.action_model._get_dists(encoding, masks)
+                probs = probs.discrete[0].probs 
+                print(f'probs {probs}')
+                loss = F.mse_loss(probs, template)
+                print(f'template {template}')
+                wandb.log({
+                    'informed_init_loss_actor': loss
+                })
+                loss.backward()
+                opt.step()
                 
 
 class SharedActorCritic(SimpleActor, Critic):

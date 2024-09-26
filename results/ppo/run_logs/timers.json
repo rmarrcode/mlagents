@@ -1,0 +1,54 @@
+{
+    "name": "root",
+    "metadata": {
+        "timer_format_version": "0.1.0",
+        "start_time_seconds": "1727318766",
+        "python_version": "3.7.0 (v3.7.0:1bf9cc5093, Jun 27 2018, 04:59:51) [MSC v.1914 64 bit (AMD64)]",
+        "command_line_arguments": "c:/Users/rmarr/Documents/python-envs/.mlagents/Lib/site-packages/mlagents/learn-copy.py --force",
+        "mlagents_version": "0.29.0",
+        "mlagents_envs_version": "0.28.0",
+        "communication_protocol_version": "1.5.0",
+        "pytorch_version": "1.7.0+cpu",
+        "numpy_version": "1.21.6",
+        "end_time_seconds": "1727318775"
+    },
+    "total": 8.7224474,
+    "count": 1,
+    "self": 0.008769100000000307,
+    "children": {
+        "run_training.setup": {
+            "total": 0.08602089999999984,
+            "count": 1,
+            "self": 0.08602089999999984
+        },
+        "TrainerController.start_learning": {
+            "total": 8.6276574,
+            "count": 1,
+            "self": 0.0008916000000009916,
+            "children": {
+                "TrainerController._reset_env": {
+                    "total": 8.6251897,
+                    "count": 1,
+                    "self": 8.6251897
+                },
+                "trainer_threads": {
+                    "total": 9.999999992515995e-07,
+                    "count": 1,
+                    "self": 9.999999992515995e-07
+                },
+                "TrainerController._save_models": {
+                    "total": 0.0015751000000001625,
+                    "count": 1,
+                    "self": 0.00032969999999998834,
+                    "children": {
+                        "RLTrainer._checkpoint": {
+                            "total": 0.0012454000000001741,
+                            "count": 1,
+                            "self": 0.0012454000000001741
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
