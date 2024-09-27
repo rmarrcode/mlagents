@@ -31,3 +31,15 @@
       }
     ]
   }
+
+  
+- **Set the virtual environment in VSCode:**
+  - Python interpreter: `C:\Users\rmarr\Documents\python-envs\.mlagents\Scripts\python.exe`
+ 
+  
+### Additional Notes:
+- **Ensure `PYTHONPATH`** is correctly set to point to the parent directory of `mlagents`, as shown in the `launch.json` configuration.
+- **Virtual Environment Activation:** If not using the Python extension’s interpreter selector, manually activate the virtual environment in the terminal.
+
+This should help streamline your setup and avoid issues in the future!
+
