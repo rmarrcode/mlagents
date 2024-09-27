@@ -3,12 +3,18 @@
     "configurations": [
       {
         "name": "Python: Current File",
-        "type": "debugpy",  // You can use "debugpy" as well
+        "type": "python",
         "request": "launch",
-        "program": "${workspaceFolder}/learn-copy.py",
+        "program": "${file}",  
+        "args": [
+            "C:\\Users\\rmarr\\Documents\\visibility-game\\Assets\\ryan_was_here\\config\\hide-and-seek.yaml",
+            "--force"
+        ],
         "console": "integratedTerminal",
-        "justMyCode": false  // Set this to false to debug all code
+        "env": {
+          "PYTHONPATH": "C:\\Users\\rmarr\\Documents"  
+        },
+        "justMyCode": false,
       }
     ]
 }
-  

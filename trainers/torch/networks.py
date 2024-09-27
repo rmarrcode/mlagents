@@ -761,7 +761,7 @@ class SimpleActor(nn.Module, Actor):
 
     def informed_init(self):
         opt = optim.Adam(list(self.network_body.parameters()) + list(self.action_model.parameters()), lr=0.0001)
-        PATH_TO_MAP_VALS = 'C:\\Users\\rmarr\\Documents\\python-envs\\.mlagents\\Lib\\site-packages\\mlagents\\map_vals\\map_vals.json'
+        PATH_TO_MAP_VALS = 'C:\\Users\\rmarr\\Documents\\mlagents\\map_vals\\map_vals.json'
         with open(PATH_TO_MAP_VALS, 'r') as f:
             map_vals = json.load(f)
         masks = torch.tensor([1, 1, 1, 1, 1]).repeat(100, 1)

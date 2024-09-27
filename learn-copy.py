@@ -1,4 +1,7 @@
 # # Unity ML-Agents Toolkit
+import os
+print(os.environ.get('PYTHONPATH'))
+
 from mlagents import torch_utils
 import yaml
 

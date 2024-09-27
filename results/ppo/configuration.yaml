@@ -3,8 +3,8 @@ behaviors:
   Seeker:
     trainer_type: ppo
     hyperparameters:
-      batch_size: 1024
-      buffer_size: 10240
+      batch_size: 50
+      buffer_size: 500
       learning_rate: 0.0003
       beta: 0.005
       epsilon: 0.2
@@ -24,7 +24,7 @@ behaviors:
     reward_signals:
       extrinsic:
         gamma: 0.99
-        strength: 1.0
+        strength: 100.0
         network_settings:
           normalize: false
           hidden_units: 128
@@ -36,11 +36,65 @@ behaviors:
     init_path: null
     keep_checkpoints: 5
     checkpoint_interval: 500000
-    max_steps: 500000
+    max_steps: 50000000
     time_horizon: 64
     summary_freq: 50000
     threaded: false
-    self_play: null
+    self_play:
+      save_steps: 500000
+      team_change: 1000000
+      swap_steps: 2000
+      window: 10
+      play_against_latest_model_ratio: 0.5
+      initial_elo: 1200.0
+    behavioral_cloning: null
+  Hider:
+    trainer_type: ppo
+    hyperparameters:
+      batch_size: 50
+      buffer_size: 500
+      learning_rate: 0.0003
+      beta: 0.005
+      epsilon: 0.2
+      lambd: 0.95
+      num_epoch: 3
+      learning_rate_schedule: linear
+      beta_schedule: linear
+      epsilon_schedule: linear
+    network_settings:
+      normalize: false
+      hidden_units: 128
+      num_layers: 2
+      vis_encode_type: simple
+      memory: null
+      goal_conditioning_type: hyper
+      deterministic: false
+    reward_signals:
+      extrinsic:
+        gamma: 0.99
+        strength: 100.0
+        network_settings:
+          normalize: false
+          hidden_units: 128
+          num_layers: 2
+          vis_encode_type: simple
+          memory: null
+          goal_conditioning_type: hyper
+          deterministic: false
+    init_path: null
+    keep_checkpoints: 5
+    checkpoint_interval: 500000
+    max_steps: 50000000
+    time_horizon: 64
+    summary_freq: 50000
+    threaded: false
+    self_play:
+      save_steps: 500000
+      team_change: 1000000
+      swap_steps: 200000
+      window: 100
+      play_against_latest_model_ratio: 0.5
+      initial_elo: 1200.0
     behavioral_cloning: null
 env_settings:
   env_path: null

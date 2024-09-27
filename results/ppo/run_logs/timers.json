@@ -2,49 +2,44 @@
     "name": "root",
     "metadata": {
         "timer_format_version": "0.1.0",
-        "start_time_seconds": "1727318766",
+        "start_time_seconds": "1727395071",
         "python_version": "3.7.0 (v3.7.0:1bf9cc5093, Jun 27 2018, 04:59:51) [MSC v.1914 64 bit (AMD64)]",
-        "command_line_arguments": "c:/Users/rmarr/Documents/python-envs/.mlagents/Lib/site-packages/mlagents/learn-copy.py --force",
+        "command_line_arguments": "C:\\Users\\rmarr\\Documents\\mlagents\\learn-copy.py C:\\Users\\rmarr\\Documents\\visibility-game\\Assets\\ryan_was_here\\config\\hide-and-seek.yaml --force",
         "mlagents_version": "0.29.0",
         "mlagents_envs_version": "0.28.0",
         "communication_protocol_version": "1.5.0",
         "pytorch_version": "1.7.0+cpu",
         "numpy_version": "1.21.6",
-        "end_time_seconds": "1727318775"
+        "end_time_seconds": "1727395100"
     },
-    "total": 8.7224474,
+    "total": 29.1381938,
     "count": 1,
-    "self": 0.008769100000000307,
+    "self": 0.039343999999999824,
     "children": {
         "run_training.setup": {
-            "total": 0.08602089999999984,
+            "total": 0.44052170000000057,
             "count": 1,
-            "self": 0.08602089999999984
+            "self": 0.44052170000000057
         },
         "TrainerController.start_learning": {
-            "total": 8.6276574,
+            "total": 28.6583281,
             "count": 1,
-            "self": 0.0008916000000009916,
+            "self": 0.001449699999998444,
             "children": {
                 "TrainerController._reset_env": {
-                    "total": 8.6251897,
+                    "total": 28.5335183,
                     "count": 1,
-                    "self": 8.6251897
-                },
-                "trainer_threads": {
-                    "total": 9.999999992515995e-07,
-                    "count": 1,
-                    "self": 9.999999992515995e-07
+                    "self": 28.5335183
                 },
                 "TrainerController._save_models": {
-                    "total": 0.0015751000000001625,
+                    "total": 0.1233600999999993,
                     "count": 1,
-                    "self": 0.00032969999999998834,
+                    "self": 0.001800500000001648,
                     "children": {
                         "RLTrainer._checkpoint": {
-                            "total": 0.0012454000000001741,
-                            "count": 1,
-                            "self": 0.0012454000000001741
+                            "total": 0.12155959999999766,
+                            "count": 2,
+                            "self": 0.12155959999999766
                         }
                     }
                 }
