@@ -771,7 +771,6 @@ class SimpleActor(nn.Module, Actor):
         all_locations = [torch.tensor([list(map(float, s.split('-'))) for s in map_vals.keys()])]
 
         print('informed init actor...')  
-        print(f'another line')
         for i in range(1000):
             for j in range(50):
                 times = torch.full((all_locations[0].shape[0],), j)
@@ -782,9 +781,7 @@ class SimpleActor(nn.Module, Actor):
                 )
                 probs = self.action_model._get_dists(encoding, masks)
                 probs = probs.discrete[0].probs 
-                print(f'probs {probs}')
                 loss = F.mse_loss(probs, template)
-                print(f'template {template}')
                 wandb.log({
                     'informed_init_loss_actor': loss
                 })
