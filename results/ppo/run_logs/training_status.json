@@ -1,50 +1,19 @@
 {
-    "Seeker": {
+    "Hider": {
         "elo": 1198.5043131693246,
         "checkpoints": [
             {
-                "steps": 1949,
-                "file_path": "results\\ppo\\Seeker\\Seeker-1949.onnx",
+                "steps": 4045,
+                "file_path": "results\\ppo\\Hider\\Hider-4045.onnx",
                 "reward": null,
-                "creation_time": 1727674655.6726432,
+                "creation_time": 1727851684.285995,
                 "auxillary_file_paths": [
-                    "results\\ppo\\Seeker\\Seeker-1949.pt"
+                    "results\\ppo\\Hider\\Hider-4045.pt"
                 ]
             }
-        ],
-        "final_checkpoint": {
-            "steps": 1949,
-            "file_path": "results\\ppo\\Seeker.onnx",
-            "reward": null,
-            "creation_time": 1727674655.6726432,
-            "auxillary_file_paths": [
-                "results\\ppo\\Seeker\\Seeker-1949.pt"
-            ]
-        }
+        ]
     },
-    "Hider": {
-        "elo": 1200.0,
-        "checkpoints": [
-            {
-                "steps": 0,
-                "file_path": "results\\ppo\\Hider\\Hider-0.onnx",
-                "reward": null,
-                "creation_time": 1727674655.7147784,
-                "auxillary_file_paths": [
-                    "results\\ppo\\Hider\\Hider-0.pt"
-                ]
-            }
-        ],
-        "final_checkpoint": {
-            "steps": 0,
-            "file_path": "results\\ppo\\Hider.onnx",
-            "reward": null,
-            "creation_time": 1727674655.7147784,
-            "auxillary_file_paths": [
-                "results\\ppo\\Hider\\Hider-0.pt"
-            ]
-        }
-    },
+    "Seeker": {},
     "metadata": {
         "stats_format_version": "0.3.0",
         "mlagents_version": "0.29.0",
