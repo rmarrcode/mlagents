@@ -7,7 +7,7 @@
         "request": "launch",
         "program": "${file}",  
         "args": [
-            "C:\\Users\\rmarr\\Documents\\visibility-game\\Assets\\ryan_was_here\\config\\breadcrumb-exercise.yaml",
+            "C:\\Users\\rmarr\\Documents\\visibility-game\\Assets\\ryan_was_here\\config\\breadcrumb-exercise-ppo.yaml",
             "--force"
         ],
         "console": "integratedTerminal",
