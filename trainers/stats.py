@@ -185,18 +185,21 @@ class ConsoleWriter(StatsWriter):
             if "Environment/Group Cumulative Reward" in values:
                 group_stats_summary = values["Environment/Group Cumulative Reward"]
                 log_info.append(f"Mean Group Reward: {group_stats_summary.mean:0.3f}")
+                wandb.log({"Mean Group Reward" : group_stats_summary.mean})
             else:
                 log_info.append(f"Std of Reward: {stats_summary.std:0.3f}")
+                wandb.log({"Std of Reward" : stats_summary.std})
+
             log_info.append(is_training)
 
             if self.self_play and "Self-play/ELO" in values:
                 elo_stats = values["Self-play/ELO"]
                 log_info.append(f"ELO: {elo_stats.mean:0.3f}")
+                wandb.log({category : elo_stats.mean})
         else:
             log_info.append("No episode was completed since last summary")
             log_info.append(is_training)
         logger.info(". ".join(log_info) + ".")
-        wandb.log({category : elo_stats.mean})
 
     def add_property(
         self, category: str, property_type: StatsPropertyType, value: Any
