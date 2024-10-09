@@ -8,6 +8,7 @@ import torch.optim as optim
 import wandb
 import json 
 import numpy as np
+import pandas as pd
 
 from mlagents_envs.base_env import ActionSpec, ObservationSpec, ObservationType
 from mlagents.trainers.torch.action_model import ActionModel
@@ -522,7 +523,7 @@ class ValueNetwork(nn.Module, Critic):
             [1.5, 0.5, 8.5],
             [0.5, 0.5, 9.5]
         ]
-        print('informed init...')
+        print('informed init value...')
         template = torch.tensor([int(location in high_val_locations) * 10 for location in locations], dtype=torch.float32, requires_grad=False)
         locations_tensor = [torch.tensor(locations)]
         for i in range(20000):
@@ -531,7 +532,7 @@ class ValueNetwork(nn.Module, Critic):
             opt.zero_grad()
             loss = F.mse_loss(template, output['extrinsic'])
             wandb.log({
-                'informed_init_loss': loss
+                'informed_init_value_loss': loss
             })
             loss.backward()
             opt.step()
@@ -761,32 +762,66 @@ class SimpleActor(nn.Module, Actor):
 
     def informed_init(self):
         opt = optim.Adam(list(self.network_body.parameters()) + list(self.action_model.parameters()), lr=0.0001)
-        PATH_TO_MAP_VALS = 'C:\\Users\\rmarr\\Documents\\mlagents\\map_vals\\map_vals.json'
-        with open(PATH_TO_MAP_VALS, 'r') as f:
-            map_vals = json.load(f)
-        masks = torch.tensor([1, 1, 1, 1, 1]).repeat(100, 1)
+        PATH_TO_MAP_VALS = 'C:\\Users\\rmarr\\Documents\\mlagents\\map_vals\\agentroute.csv'
+        df = pd.read_csv(PATH_TO_MAP_VALS)
+        target_dist = torch.zeros((400, 5))
+        states = torch.zeros((400, 11))
+        it = 0
+        for x_off in range(0, 20, 1):
+            for z_off in range(0, 20, 1):
+                states[it] = torch.cat( (torch.tensor([(x_off-10) + 0.5, 0.5, (z_off-10) + 0.5]), torch.zeros(8)), dim=0)
+                target_dist[it] = F.one_hot(torch.tensor(df.iloc[z_off][x_off]), num_classes=5) if df.iloc[z_off][x_off] >= 0 else torch.full((5,), 0.2)
+                it = it+1
+        masks = torch.tensor([1, 1, 1, 1, 1]).repeat(400, 1)
+        print('informed init actor...')
+        for i in range(10000):
+            encoding, memories_out = self.network_body([states], memories=[], sequence_length=1)   
+            probs = self.action_model._get_dists(encoding, masks)
+            probs = probs.discrete[0].probs 
+            loss = F.mse_loss(probs, target_dist)
+            wandb.log({
+                'informed_init_loss_actor': loss
+            })
+            loss.backward()
+            opt.step()
+        print('done')
 
-        create_single_dist = lambda s: torch.full((5,), 0.2) if s == -1 else torch.cat([torch.zeros(int(s)), torch.tensor([1.0]), torch.zeros(5 - int(s) - 1)])
-        template = torch.stack([create_single_dist(s) for s in map_vals.values()])
-        all_locations = [torch.tensor([list(map(float, s.split('-'))) for s in map_vals.keys()])]
+        with open('C:\\Users\\rmarr\\Documents\\mlagents\\map_vals\\net.json', 'w') as json_file:
+            d = {
+                'states': states.tolist(),
+                'probs': probs.tolist(),
+                'target_dist': target_dist.tolist()
+            }
+            json.dump(d, json_file)
 
-        print('informed init actor...')  
-        for i in range(1000):
-            for j in range(50):
-                times = torch.full((all_locations[0].shape[0],), j)
-                state = torch.cat((all_locations[0], times.unsqueeze(1)), dim=1)
-                print(state)
-                encoding, memories_out = self.network_body(
-                    [state], memories=[], sequence_length=1
-                )
-                probs = self.action_model._get_dists(encoding, masks)
-                probs = probs.discrete[0].probs 
-                loss = F.mse_loss(probs, template)
-                wandb.log({
-                    'informed_init_loss_actor': loss
-                })
-                loss.backward()
-                opt.step()
+
+    # def informed_init(self):
+    #     opt = optim.Adam(list(self.network_body.parameters()) + list(self.action_model.parameters()), lr=0.0001)
+    #     PATH_TO_MAP_VALS = 'C:\\Users\\rmarr\\Documents\\mlagents\\map_vals\\agentroute.csv'
+    #     with open(PATH_TO_MAP_VALS, 'r') as f:
+    #         map_vals = json.load(f)
+    #     masks = torch.tensor([1, 1, 1, 1, 1]).repeat(100, 1)
+
+    #     create_single_dist = lambda s: torch.full((5,), 0.2) if s == -1 else torch.cat([torch.zeros(int(s)), torch.tensor([1.0]), torch.zeros(5 - int(s) - 1)])
+    #     template = torch.stack([create_single_dist(s) for s in map_vals.values()])
+    #     all_locations = [torch.tensor([list(map(float, s.split('-'))) for s in map_vals.keys()])]
+    #     print('informed init loss actor...')  
+    #     for i in range(1000):
+    #         for j in range(50):
+    #             times = torch.full((all_locations[0].shape[0],), j)
+    #             state = torch.cat((all_locations[0], times.unsqueeze(1)), dim=1)
+    #             print(state)
+    #             encoding, memories_out = self.network_body(
+    #                 [state], memories=[], sequence_length=1
+    #             )
+    #             probs = self.action_model._get_dists(encoding, masks)
+    #             probs = probs.discrete[0].probs 
+    #             loss = F.mse_loss(probs, template)
+    #             wandb.log({
+    #                 'informed_init_loss_actor': loss
+    #             })
+    #             loss.backward()
+    #             opt.step()
                 
 
 class SharedActorCritic(SimpleActor, Critic):

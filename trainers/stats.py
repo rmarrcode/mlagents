@@ -182,7 +182,7 @@ class ConsoleWriter(StatsWriter):
                 log_info.append(f"Rank: {self.rank}")
 
             log_info.append(f"Mean Reward: {stats_summary.mean:0.3f}")
-            wandb.log({"Mean Group Reward" : stats_summary.mean})
+            wandb.log({"Mean Reward" : stats_summary.mean})
             if "Environment/Group Cumulative Reward" in values:
                 group_stats_summary = values["Environment/Group Cumulative Reward"]
                 log_info.append(f"Mean Group Reward: {group_stats_summary.mean:0.3f}")
