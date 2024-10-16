@@ -765,11 +765,11 @@ class SimpleActor(nn.Module, Actor):
         PATH_TO_MAP_VALS = 'C:\\Users\\rmarr\\Documents\\mlagents\\map_vals\\agentroute.csv'
         df = pd.read_csv(PATH_TO_MAP_VALS)
         target_dist = torch.zeros((400, 5))
-        states = torch.zeros((400, 11))
+        states = torch.zeros((400, 12))
         it = 0
         for x_off in range(0, 20, 1):
             for z_off in range(0, 20, 1):
-                states[it] = torch.cat( (torch.tensor([(x_off-10) + 0.5, 0.5, (z_off-10) + 0.5]), torch.zeros(8)), dim=0)
+                states[it] = torch.cat( (torch.tensor([(x_off-10) + 0.5, 0.5, (z_off-10) + 0.5]), torch.zeros(9)), dim=0)
                 target_dist[it] = F.one_hot(torch.tensor(df.iloc[z_off][x_off]), num_classes=5) if df.iloc[z_off][x_off] >= 0 else torch.full((5,), 0.2)
                 it = it+1
         masks = torch.tensor([1, 1, 1, 1, 1]).repeat(400, 1)

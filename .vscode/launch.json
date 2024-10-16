@@ -2,19 +2,19 @@
     "version": "0.2.0",
     "configurations": [
       {
-        "name": "Python: Current File",
+        "name": "Python: Remote Attach",
         "type": "python",
-        "request": "launch",
-        "program": "${file}",  
-        "args": [
-            "C:\\Users\\rmarr\\Documents\\visibility-game\\Assets\\ryan_was_here\\config\\breadcrumb-exercise-ppo.yaml",
-            "--force"
-        ],
-        "console": "integratedTerminal",
-        "env": {
-          "PYTHONPATH": "C:\\Users\\rmarr\\Documents"  
+        "request": "attach",
+        "connect": {
+          "host": "localhost",  // Use the IP address if the remote process is on a different machine
+          "port": 5678          // The port used by debugpy in the running process
         },
-        "justMyCode": false,
+        "pathMappings": [
+          {
+            "localRoot": "C:\\Users\\rmarr\\Documents",  // Local path of the source code in your workspace
+            "remoteRoot": "C:\\Users\\rmarr\\Documents"                   // Remote path where the Python code is running
+          }
+        ]
       }
     ]
 }
