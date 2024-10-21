@@ -794,7 +794,7 @@ class SimpleActor(nn.Module, Actor):
             }
             json.dump(d, json_file)
 
-
+    #inform val
     # def informed_init(self):
     #     opt = optim.Adam(list(self.network_body.parameters()) + list(self.action_model.parameters()), lr=0.0001)
     #     PATH_TO_MAP_VALS = 'C:\\Users\\rmarr\\Documents\\mlagents\\map_vals\\agentroute.csv'
