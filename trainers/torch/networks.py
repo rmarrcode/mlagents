@@ -485,52 +485,21 @@ class ValueNetwork(nn.Module, Critic):
 
     def informed_init(self):            
         opt = optim.Adam(list(self.network_body.parameters()) + list(self.value_heads.parameters()), lr=0.0001)
-        locations = []
-        for i in range(10):
-            for j in range(10):
-                locations.append([0.5+i, 0.5, 0.5+j])
-        high_val_locations = [
-            [9.5, 0.5, 9.5],
-            [9.5, 0.5, 8.5],
-            [9.5, 0.5, 7.5],
-            [9.5, 0.5, 6.5],
-            [9.5, 0.5, 5.5],
-            [9.5, 0.5, 4.5],
-            [9.5, 0.5, 3.5],
-            [9.5, 0.5, 2.5],
-            [9.5, 0.5, 1.5],
-            [9.5, 0.5, .5],
+        states = [torch.tensor([[(i-10) + 0.5, 0.5, (j-10)+0.5] + [0]*9 for i in range(20) for j in range(20)])]
+       
+        base_path = '/home/rmarr/Projects/visibility-game-env/.visibility-game-env/lib/python3.8/site-packages/mlagents/results/network_results'
+        with open(f'{base_path}/value.json', 'r') as file:
+            target_values = json.load(file)
 
-            [8.5, 0.5, .5],
-            [8.5, 0.5, .5],
-            [7.5, 0.5, .5],
-            [6.5, 0.5, .5],
-            [5.5, 0.5, .5],
-            [4.5, 0.5, .5],
-            [3.5, 0.5, .5],
-            [2.5, 0.5, .5],
-            [1.5, 0.5, .5],
-            [0.5, 0.5, .5],
-
-            [8.5, 0.5, .5],
-            [8.5, 0.5, 1.5],
-            [7.5, 0.5, 2.5],
-            [6.5, 0.5, 3.5],
-            [5.5, 0.5, 4.5],
-            [4.5, 0.5, 5.5],
-            [3.5, 0.5, 6.5],
-            [2.5, 0.5, 7.5],
-            [1.5, 0.5, 8.5],
-            [0.5, 0.5, 9.5]
-        ]
         print('informed init value...')
-        template = torch.tensor([int(location in high_val_locations) * 10 for location in locations], dtype=torch.float32, requires_grad=False)
-        locations_tensor = [torch.tensor(locations)]
         for i in range(20000):
-            encoding, memories = self.network_body(locations_tensor, None, None, 100)
-            output = self.value_heads(encoding)
+            values = self.critic_pass(
+                states,
+                memories=[],
+                sequence_length=1
+            )
             opt.zero_grad()
-            loss = F.mse_loss(template, output['extrinsic'])
+            loss = F.mse_loss(values[0]['extrinsic'], torch.tensor(target_values["values"]))
             wandb.log({
                 'informed_init_value_loss': loss
             })
@@ -760,9 +729,44 @@ class SimpleActor(nn.Module, Actor):
             export_out += [memories_out]
         return tuple(export_out)
 
+    # def _record_networks(self):
+    #     policy_data = {}
+    #     value_data = {}
+    #     states = [torch.tensor([[0.5 + i, 0.5, 0.5 + j] for i in range(10) for j in range(10)])]
+    #     # actions = AgentAction(continuous_tensor=torch.tensor([]), 
+    #     #                       discrete_list=[torch.tensor([0,1,2,3,4] * 100)])
+    #     actions = AgentAction(continuous_tensor=torch.tensor([]), 
+    #                         discrete_list=[torch.tensor([])])     
+    #     act_masks = torch.full((100, 5), 1)
+    #     policy_data['states'] = states[0].tolist()
+    #     log_probs, entropy = self.optimizer.policy.evaluate_actions(
+    #         states,
+    #         masks=act_masks,
+    #         actions=actions,
+    #         memories=[],
+    #         seq_len=1
+    #     )
+    #     policy_data['log_probs'] = log_probs.all_discrete_tensor.tolist()
+    #     policy_data['entropy'] = entropy.tolist()
+
+    #     value_data['states'] = states[0].tolist()
+    #     values = self.optimizer.critic.critic_pass(
+    #         states,
+    #         memories=[],
+    #         sequence_length=1
+    #     )
+    #     t = values[0]['extrinsic']
+    #     value_data['values'] = values[0]['extrinsic'].tolist()
+    #     base_path = 'C:\\Users\\rmarr\\Documents\\python-envs\\3.7.0\\Lib\\site-packages\\mlagents\\network_data'
+    #     with open(f'{base_path}\\policy.json', 'w') as file:
+    #         json.dump(policy_data, file, indent=4)
+    #     with open(f'{base_path}\\value.json', 'w') as file:
+    #         json.dump(value_data, file, indent=4)    
+
+   
     def informed_init(self):
         opt = optim.Adam(list(self.network_body.parameters()) + list(self.action_model.parameters()), lr=0.0001)
-        PATH_TO_MAP_VALS = 'C:\\Users\\rmarr\\Documents\\mlagents\\map_vals\\agentroute.csv'
+        PATH_TO_MAP_VALS = '/home/rmarr/Projects/visibility-game-env/.visibility-game-env/lib64/python3.8/site-packages/mlagents/map_vals/agentroute.csv'
         df = pd.read_csv(PATH_TO_MAP_VALS)
         target_dist = torch.zeros((400, 5))
         states = torch.zeros((400, 12))
@@ -774,7 +778,7 @@ class SimpleActor(nn.Module, Actor):
                 it = it+1
         masks = torch.tensor([1, 1, 1, 1, 1]).repeat(400, 1)
         print('informed init actor...')
-        for i in range(10000):
+        for i in range(50000):
             encoding, memories_out = self.network_body([states], memories=[], sequence_length=1)   
             probs = self.action_model._get_dists(encoding, masks)
             probs = probs.discrete[0].probs 
@@ -786,13 +790,13 @@ class SimpleActor(nn.Module, Actor):
             opt.step()
         print('done')
 
-        with open('C:\\Users\\rmarr\\Documents\\mlagents\\map_vals\\net.json', 'w') as json_file:
-            d = {
-                'states': states.tolist(),
-                'probs': probs.tolist(),
-                'target_dist': target_dist.tolist()
-            }
-            json.dump(d, json_file)
+        # with open('C:\\Users\\rmarr\\Documents\\mlagents\\map_vals\\net.json', 'w') as json_file:
+        #     d = {
+        #         'states': states.tolist(),
+        #         'probs': probs.tolist(),
+        #         'target_dist': target_dist.tolist()
+        #     }
+        #     json.dump(d, json_file)
 
 
     # def informed_init(self):

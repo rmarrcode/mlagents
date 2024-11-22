@@ -62,39 +62,43 @@ class PPOTrainer(RLTrainer):
         self.policy: Policy = None  # type: ignore
 
     def _record_networks(self):
-            policy_data = {}
-            value_data = {}
-            states = [torch.tensor([[0.5 + i, 0.5, 0.5 + j] for i in range(10) for j in range(10)])]
-            # actions = AgentAction(continuous_tensor=torch.tensor([]), 
-            #                       discrete_list=[torch.tensor([0,1,2,3,4] * 100)])
-            actions = AgentAction(continuous_tensor=torch.tensor([]), 
-                                discrete_list=[torch.tensor([])])     
-            act_masks = torch.full((100, 5), 1)
-            policy_data['states'] = states[0].tolist()
-            log_probs, entropy = self.optimizer.policy.evaluate_actions(
-                states,
-                masks=act_masks,
-                actions=actions,
-                memories=[],
-                seq_len=1
-            )
-            policy_data['log_probs'] = log_probs.all_discrete_tensor.tolist()
-            policy_data['entropy'] = entropy.tolist()
-
-            value_data['states'] = states[0].tolist()
-            values = self.optimizer.critic.critic_pass(
-                states,
-                memories=[],
-                sequence_length=1
-            )
-            t = values[0]['extrinsic']
-            value_data['values'] = values[0]['extrinsic'].tolist()
-            base_path = 'C:\\Users\\rmarr\\Documents\\python-envs\\3.7.0\\Lib\\site-packages\\mlagents\\network_data'
-            with open(f'{base_path}\\policy.json', 'w') as file:
-                json.dump(policy_data, file, indent=4)
-            with open(f'{base_path}\\value.json', 'w') as file:
-                json.dump(value_data, file, indent=4)    
-
+        #policy_data = {}
+        value_data = {}
+        # states = torch.zeros((400, 12))
+        # it = 0
+        # for x_off in range(0, 20, 1):
+        #     for z_off in range(0, 20, 1):
+        #         states[it] = torch.cat( (torch.tensor([(x_off-10) + 0.5, 0.5, (z_off-10) + 0.5]), torch.zeros(9)), dim=0)
+        #         it = it+1
+        states = [torch.tensor([[(i-10) + 0.5, 0.5, (j-10)+0.5] + [0]*9 for i in range(20) for j in range(20)])]
+        # actions = AgentAction(continuous_tensor=torch.tensor([]), 
+        #                       discrete_list=[torch.tensor([0,1,2,3,4] * 100)])
+        actions = AgentAction(continuous_tensor=torch.tensor([]), 
+                            discrete_list=[torch.tensor([])])     
+        act_masks = torch.full((100, 5), 1)
+        # policy_data['states'] = states[0].tolist()
+        # log_probs, entropy = self.optimizer.policy.evaluate_actions(
+        #     states,
+        #     masks=act_masks,
+        #     actions=actions,
+        #     memories=[],
+        #     seq_len=1
+        # )
+        # policy_data['log_probs'] = log_probs.all_discrete_tensor.tolist()
+        # policy_data['entropy'] = entropy.tolist()
+        value_data['states'] = states[0].tolist()
+        values = self.optimizer.critic.critic_pass(
+            states,
+            memories=[],
+            sequence_length=1
+        )
+        # t = values[0]['extrinsic']
+        value_data['values'] = values[0]['extrinsic'].tolist()
+        base_path = '/home/rmarr/Projects/visibility-game-env/.visibility-game-env/lib/python3.8/site-packages/mlagents/results/network_results'
+        # with open(f'{base_path}/policy.json', 'w') as file:
+        #     json.dump(policy_data, file, indent=4)
+        with open(f'{base_path}/value.json', 'w') as file:
+            json.dump(value_data, file, indent=4) 
 
     def _process_trajectory(self, trajectory: Trajectory) -> None:
         """
@@ -297,8 +301,9 @@ class PPOTrainer(RLTrainer):
         self.optimizer = self.create_ppo_optimizer()
         # TODO make better
         if parsed_behavior_id.behavior_id == 'Seeker?team=1':
-            self.optimizer.informed_init_actor()
+            pass
             #self.optimizer.informed_init_critic()
+            #self.optimizer.informed_init_actor()
         for _reward_signal in self.optimizer.reward_signals.keys():
             self.collected_rewards[_reward_signal] = defaultdict(lambda: 0)
 

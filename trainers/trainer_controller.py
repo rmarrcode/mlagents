@@ -167,6 +167,7 @@ class TrainerController:
 
     @timed
     def start_learning(self, env_manager: EnvManager) -> None:
+        print('start learning')
         self._create_output_path(self.output_path)
         try:
             # Initial reset
@@ -229,6 +230,7 @@ class TrainerController:
 
     @timed
     def advance(self, env_manager: EnvManager) -> int:
+        print('advance')
         # Get steps
         with hierarchical_timer("env_step"):
             new_step_infos = env_manager.get_steps()
