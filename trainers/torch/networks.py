@@ -483,6 +483,12 @@ class ValueNetwork(nn.Module, Critic):
     def update_normalization(self, buffer: AgentBuffer) -> None:
         self.network_body.update_normalization(buffer)
 
+    def save(self, model_name):
+        torch.save(self.network_body, f"{model_name}.pth")
+
+    def load(self, model_name):
+        self.network_body = torch.load(f"{model_name}.pth")
+
     def informed_init(self):            
         opt = optim.Adam(list(self.network_body.parameters()) + list(self.value_heads.parameters()), lr=0.0001)
         states = [torch.tensor([[(i-10) + 0.5, 0.5, (j-10)+0.5] + [0]*9 for i in range(20) for j in range(20)])]
@@ -492,7 +498,7 @@ class ValueNetwork(nn.Module, Critic):
             target_values = json.load(file)
 
         print('informed init value...')
-        for i in range(20000):
+        for i in range(50000):
             values = self.critic_pass(
                 states,
                 memories=[],

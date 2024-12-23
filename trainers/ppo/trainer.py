@@ -100,6 +100,16 @@ class PPOTrainer(RLTrainer):
         with open(f'{base_path}/value.json', 'w') as file:
             json.dump(value_data, file, indent=4) 
 
+    def _save_critic(self):
+        base_path = '/home/rmarr/Projects/visibility-game-env/.visibility-game-env/lib/python3.8/site-packages/mlagents/results/saved_models'
+        full_path_critic = f"{base_path}/critic"
+        self.optimizer.critic.save(full_path_critic)
+
+    def _load_critic(self):
+        base_path = '/home/rmarr/Projects/visibility-game-env/.visibility-game-env/lib/python3.8/site-packages/mlagents/results/saved_models'
+        full_path_critic = f"{base_path}/critic"
+        self.optimizer.critic.load(full_path_critic)
+
     def _process_trajectory(self, trajectory: Trajectory) -> None:
         """
         Takes a trajectory and processes it, putting it into the update buffer.
