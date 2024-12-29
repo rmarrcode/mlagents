@@ -244,14 +244,17 @@ class RLTrainer(Trainer):
         write the summary. This logic ensures summaries are written on the update step and not in between.
         :param step_after_process: the step count after processing the next trajectory.
         """
+        #print(f'step {step_after_process}')
         if self._next_summary_step == 0:  # Don't write out the first one
             self._next_summary_step = self._get_next_interval_step(self.summary_freq)
-            self._load_critic()
+            #self._load_critic()
+            #self._load_policy()
             #self._record_networks()
         if step_after_process >= self._next_summary_step and self.get_step != 0:
             self._write_summary(self._next_summary_step)
+            #self._save_policy()
             #self._save_critic()
-            #self._record_networks()
+            self._record_networks()
 
     def _append_to_update_buffer(self, agentbuffer_trajectory: AgentBuffer) -> None:
         """

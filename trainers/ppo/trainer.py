@@ -8,6 +8,7 @@ from typing import cast
 import numpy as np
 import torch
 import json
+import os
 
 from mlagents_envs.logging_util import get_logger
 from mlagents_envs.base_env import BehaviorSpec
@@ -100,15 +101,29 @@ class PPOTrainer(RLTrainer):
         with open(f'{base_path}/value.json', 'w') as file:
             json.dump(value_data, file, indent=4) 
 
-    def _save_critic(self):
+    def _save_policy(self):
         base_path = '/home/rmarr/Projects/visibility-game-env/.visibility-game-env/lib/python3.8/site-packages/mlagents/results/saved_models'
+        full_path_policy = f"{base_path}/policy"
+        self.optimizer.policy.actor.save(full_path_policy)
+        print('-----policy saved------')
+
+    def _load_policy(self):
+        base_path = '/home/rmarr/Projects/visibility-game-env/.visibility-game-env/lib/python3.8/site-packages/mlagents/results/saved_models/600reward'
+        full_path_policy = f"{base_path}/policy"
+        self.optimizer.policy.actor.load(full_path_policy)
+        print('-----policy loaded------')
+
+    def _save_critic(self):
+        base_path = '/home/rmarr/Projects/visibility-game-env/.visibility-game-env/lib/python3.8/site-packages/mlagents/results/'
         full_path_critic = f"{base_path}/critic"
         self.optimizer.critic.save(full_path_critic)
+        print('-----critic saved------')
 
     def _load_critic(self):
-        base_path = '/home/rmarr/Projects/visibility-game-env/.visibility-game-env/lib/python3.8/site-packages/mlagents/results/saved_models'
+        base_path = '/home/rmarr/Projects/visibility-game-env/.visibility-game-env/lib/python3.8/site-packages/mlagents/results/saved_models/600reward/'
         full_path_critic = f"{base_path}/critic"
         self.optimizer.critic.load(full_path_critic)
+        print('-----critic loaded------')
 
     def _process_trajectory(self, trajectory: Trajectory) -> None:
         """
@@ -298,31 +313,60 @@ class PPOTrainer(RLTrainer):
         :param parsed_behavior_id: Behavior identifiers that the policy should belong to.
         :param policy: Policy to associate with name_behavior_id.
         """
-        if self.policy:
-            logger.warning(
-                "Your environment contains multiple teams, but {} doesn't support adversarial games. Enable self-play to \
-                    train adversarial games.".format(
-                    self.__class__.__name__
-                )
-            )
         self.policy = policy
         self.policies[parsed_behavior_id.behavior_id] = policy
 
         self.optimizer = self.create_ppo_optimizer()
-        # TODO make better
-        if parsed_behavior_id.behavior_id == 'Seeker?team=1':
-            pass
-            #self.optimizer.informed_init_critic()
-            #self.optimizer.informed_init_actor()
-        for _reward_signal in self.optimizer.reward_signals.keys():
-            self.collected_rewards[_reward_signal] = defaultdict(lambda: 0)
-
+        
+        # Register policy and optimizer with model_saver
         self.model_saver.register(self.policy)
         self.model_saver.register(self.optimizer)
-        self.model_saver.initialize_or_load()
+        
+        if hasattr(self.trainer_settings, 'load_critic_only') and self.trainer_settings.load_critic_only:
+            self.load_critic_only(parsed_behavior_id)
+        else:
+            # Normal initialization/loading
+            self.model_saver.initialize_or_load()
 
         # Needed to resume loads properly
         self._step = policy.get_current_step()
+
+    def load_critic_only(self, parsed_behavior_id: BehaviorIdentifiers) -> None:
+        """
+        Loads only the critic from a previous run's checkpoint
+        """
+        critic_path = os.path.join(self.model_saver.model_path, "checkpoint.pt")
+        
+        print(f"critic_path: {critic_path}")
+        if os.path.exists(critic_path):
+            try:
+                checkpoint = torch.load(critic_path)
+                print("\nCheckpoint keys:", checkpoint.keys())
+                print("\nCritic state dict:", checkpoint['critic'].keys())
+                self.optimizer.critic.load_state_dict(checkpoint['critic'])
+                self.optimizer.critic.eval()
+                print(f"Successfully loaded critic from {critic_path}")
+                self._verify_critic()
+            except Exception as e:
+                print(f"Failed to load critic: {e}")
+                raise
+        else:
+            print(f"No critic checkpoint found at {critic_path}")
+            raise FileNotFoundError(f"Critic checkpoint not found at {critic_path}")
+
+    def _verify_critic(self):
+        """
+        Verify that critic was loaded properly
+        """
+        # Check if weights are non-zero
+        has_weights = False
+        for param in self.optimizer.critic.parameters():
+            if torch.any(param != 0):
+                has_weights = True
+                break
+        
+        if not has_weights:
+            raise ValueError("Critic loaded with all zero weights!")
 
     def get_policy(self, name_behavior_id: str) -> Policy:
         """

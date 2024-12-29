@@ -235,6 +235,8 @@ class NetworkBody(nn.Module):
     def memory_size(self) -> int:
         return self.lstm.memory_size if self.use_lstm else 0
 
+
+
     def forward(
         self,
         inputs: List[torch.Tensor],
@@ -662,6 +664,12 @@ class SimpleActor(nn.Module, Actor):
     @property
     def memory_size(self) -> int:
         return self.network_body.memory_size
+
+    def save(self, model_name):
+        torch.save(self.network_body, f"{model_name}.pth")
+
+    def load(self, model_name):
+        self.network_body = torch.load(f"{model_name}.pth")
 
     def update_normalization(self, buffer: AgentBuffer) -> None:
         self.network_body.update_normalization(buffer)

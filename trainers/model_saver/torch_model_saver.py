@@ -151,3 +151,17 @@ class TorchModelSaver(BaseModelSaver):
                 logger.info(f"Copied {source_path} to {destination_path}.")
             except OSError:
                 pass
+
+    def _verify_critic(self, critic):
+        """
+        Verify that critic was loaded properly
+        """
+        # Check if weights are non-zero
+        has_weights = False
+        for param in critic.parameters():
+            if torch.any(param != 0):
+                has_weights = True
+                break
+        
+        if not has_weights:
+            raise ValueError("Critic loaded with all zero weights!")
