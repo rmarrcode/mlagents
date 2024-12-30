@@ -305,14 +305,13 @@ class PPOTrainer(RLTrainer):
             cast(TorchPolicy, self.policy), self.trainer_settings  # type: ignore
         )  # type: ignore
 
-    def add_policy(
-        self, parsed_behavior_id: BehaviorIdentifiers, policy: Policy
-    ) -> None:
+    def add_policy(self, parsed_behavior_id: BehaviorIdentifiers, policy: Policy) -> None:
         """
         Adds policy to trainer.
         :param parsed_behavior_id: Behavior identifiers that the policy should belong to.
         :param policy: Policy to associate with name_behavior_id.
         """
+        print("\nIn add_policy")  # Debug print
         self.policy = policy
         self.policies[parsed_behavior_id.behavior_id] = policy
 
@@ -322,31 +321,39 @@ class PPOTrainer(RLTrainer):
         self.model_saver.register(self.policy)
         self.model_saver.register(self.optimizer)
         
-        if hasattr(self.trainer_settings, 'load_critic_only') and self.trainer_settings.load_critic_only:
+        # TODO: make good
+        if True:
+            print("Attempting to load critic only")  # Debug print
             self.load_critic_only(parsed_behavior_id)
         else:
             # Normal initialization/loading
+            print("Normal initialization/loading")  # Debug print
             self.model_saver.initialize_or_load()
-
-        # Needed to resume loads properly
-        self._step = policy.get_current_step()
 
     def load_critic_only(self, parsed_behavior_id: BehaviorIdentifiers) -> None:
         """
         Loads only the critic from a previous run's checkpoint
         """
-        critic_path = os.path.join(self.model_saver.model_path, "checkpoint.pt")
+        print("\nIn load_critic_only")  # Debug print
+        base_path = "results"
+        print(f'parsed_behavior_id: {parsed_behavior_id}')
+        run_id = parsed_behavior_id.behavior_id  # Use behavior_id as the run_id
+        behavior_name = parsed_behavior_id.brain_name
         
-        print(f"critic_path: {critic_path}")
+        # Initialize reward signals before loading critic
+        self.collected_rewards["extrinsic"] = {}
+        
+        critic_path = os.path.join(base_path, run_id, behavior_name, "checkpoint.pt")
+        print(f"Looking for critic at: {critic_path}")  # Debug print
+        
         if os.path.exists(critic_path):
             try:
                 checkpoint = torch.load(critic_path)
                 print("\nCheckpoint keys:", checkpoint.keys())
-                print("\nCritic state dict:", checkpoint['critic'].keys())
-                self.optimizer.critic.load_state_dict(checkpoint['critic'])
+                print("\nCritic state dict:", checkpoint['Optimizer:critic'].keys())
+                self.optimizer.critic.load_state_dict(checkpoint['Optimizer:critic'])
                 self.optimizer.critic.eval()
                 print(f"Successfully loaded critic from {critic_path}")
-                self._verify_critic()
             except Exception as e:
                 print(f"Failed to load critic: {e}")
                 raise

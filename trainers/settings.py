@@ -645,6 +645,7 @@ class TrainerSettings(ExportableSettings):
     default_override: ClassVar[Optional["TrainerSettings"]] = None
     trainer_type: TrainerType = TrainerType.PPO
     hyperparameters: HyperparamSettings = attr.ib()
+    load_critic_only: bool = False
 
     @hyperparameters.default
     def _set_default_hyperparameters(self):
@@ -663,7 +664,6 @@ class TrainerSettings(ExportableSettings):
     threaded: bool = False
     self_play: Optional[SelfPlaySettings] = None
     behavioral_cloning: Optional[BehavioralCloningSettings] = None
-    load_critic_only: bool = attr.ib(default=False)
 
     cattr.register_structure_hook_func(
         lambda t: t == Dict[RewardSignalType, RewardSignalSettings],
@@ -775,6 +775,7 @@ class CheckpointSettings:
     train_model: bool = parser.get_default("train_model")
     inference: bool = parser.get_default("inference")
     results_dir: str = parser.get_default("results_dir")
+    load_critic_only: bool = parser.get_default("load_critic_only")
 
     @property
     def write_path(self) -> str:

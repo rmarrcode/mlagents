@@ -60,6 +60,20 @@ class StoreConfigFile(argparse.Action):
         StoreConfigFile.trainer_config_path = values
 
 
+class StoreTrueWithDefault(DetectDefault):
+    """
+    Custom action that combines store_true and DetectDefault functionality
+    """
+    def __init__(self, option_strings, dest, default=False, required=False, help=None):
+        super().__init__(option_strings=option_strings, dest=dest, default=default, 
+                        nargs=0, const=True, type=None, choices=None, required=required,
+                        help=help, metavar=None)
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        setattr(namespace, self.dest, True)
+        DetectDefault.non_default_args.add(self.dest)
+
+
 def _create_parser() -> argparse.ArgumentParser:
     argparser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
@@ -297,6 +311,12 @@ def _create_parser() -> argparse.ArgumentParser:
         dest="device",
         action=DetectDefault,
         help='Settings for the default torch.device used in training, for example, "cpu", "cuda", or "cuda:0"',
+    )
+    argparser.add_argument(
+        "--load-critic-only",
+        default=False,
+        action=StoreTrueWithDefault,
+        help="Load only the critic network from checkpoint and initialize a new policy network",
     )
     return argparser
 

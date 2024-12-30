@@ -1,7 +1,4 @@
 # # Unity ML-Agents Toolkit
-import os
-print(os.environ.get('PYTHONPATH'))
-
 from mlagents import torch_utils
 import yaml
 
@@ -9,6 +6,7 @@ import os
 import numpy as np
 import json
 import wandb 
+import sys
 
 from typing import Callable, Optional, List
 
@@ -43,6 +41,7 @@ logger = logging_util.get_logger(__name__)
 TRAINING_STATUS_FILE_NAME = "training_status.json"
 
 
+
 def get_version_string() -> str:
     return f""" Version information:
   ml-agents: {mlagents.trainers.__version__},
@@ -53,7 +52,9 @@ def get_version_string() -> str:
 
 def parse_command_line(argv: Optional[List[str]] = None) -> RunOptions:
     args = parser.parse_args(argv)
-    return RunOptions.from_argparse(args)
+    run_options = RunOptions.from_argparse(args)
+    return run_options
+
 
 
 def run_training(run_seed: int, options: RunOptions, num_areas: int) -> None:
@@ -71,13 +72,22 @@ def run_training(run_seed: int, options: RunOptions, num_areas: int) -> None:
 
         run_logs_dir = checkpoint_settings.run_logs_dir
         port: Optional[int] = env_settings.base_port
-        # Check if directory exists
-        validate_existing_directories(
-            checkpoint_settings.write_path,
-            checkpoint_settings.resume,
-            checkpoint_settings.force,
-            checkpoint_settings.maybe_init_path,
-        )
+
+        # Don't check for existing data when loading critic only
+        if not checkpoint_settings.load_critic_only:
+            # Only enforce restart for full training runs
+            if (
+                checkpoint_settings.initialize_from is None
+                and not checkpoint_settings.resume
+                and os.path.exists(run_logs_dir)
+                and not checkpoint_settings.force
+            ):
+                raise Exception(
+                    "Previous data from this run ID was found. Either specify a new "
+                    "run ID, use --resume to resume this run, or use the --force "
+                    "parameter to overwrite existing data."
+                )
+
         # Make run logs directory
         os.makedirs(run_logs_dir, exist_ok=True)
         # Load any needed states in case of resume
@@ -261,11 +271,12 @@ def run_cli(options: RunOptions) -> None:
     if options.env_settings.seed == -1:
         run_seed = np.random.randint(0, 10000)
         logger.debug(f"run_seed set to {run_seed}")
+    
     run_training(run_seed, options, num_areas)
 
 
 def main():
-    run_cli(parse_command_line())
+    run_cli(parse_command_line(sys.argv[1:]))
 
 
 # For python debugger to directly run this script
