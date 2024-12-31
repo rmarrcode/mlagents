@@ -177,6 +177,7 @@ class PPOTrainer(RLTrainer):
                 evaluate_result
             )
             # Report the reward signals
+            print(f'collected_rewards: {self.collected_rewards}')
             self.collected_rewards[name][agent_id] += np.sum(evaluate_result)
 
         # Compute GAE and returns
@@ -330,20 +331,13 @@ class PPOTrainer(RLTrainer):
             print("Normal initialization/loading")  # Debug print
             self.model_saver.initialize_or_load()
 
+        self._step = policy.get_current_step()
+
     def load_critic_only(self, parsed_behavior_id: BehaviorIdentifiers) -> None:
         """
         Loads only the critic from a previous run's checkpoint
         """
-        print("\nIn load_critic_only")  # Debug print
-        base_path = "results"
-        print(f'parsed_behavior_id: {parsed_behavior_id}')
-        run_id = parsed_behavior_id.behavior_id  # Use behavior_id as the run_id
-        behavior_name = parsed_behavior_id.brain_name
-        
-        # Initialize reward signals before loading critic
-        self.collected_rewards["extrinsic"] = {}
-        
-        critic_path = os.path.join(base_path, run_id, behavior_name, "checkpoint.pt")
+        critic_path = os.path.join(self.model_saver.model_path, "checkpoint.pt")
         print(f"Looking for critic at: {critic_path}")  # Debug print
         
         if os.path.exists(critic_path):
