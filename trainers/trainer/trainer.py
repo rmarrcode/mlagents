@@ -25,6 +25,7 @@ class Trainer(abc.ABC):
         trainer_settings: TrainerSettings,
         training: bool,
         load: bool,
+        load_critic_only: bool,
         artifact_path: str,
         reward_buff_cap: int = 1,
     ):
@@ -42,6 +43,7 @@ class Trainer(abc.ABC):
         self._stats_reporter = StatsReporter(brain_name)
         self.is_training = training
         self.load = load
+        self.load_critic_only = load_critic_only
         self._reward_buffer: Deque[float] = deque(maxlen=reward_buff_cap)
         self.policy_queues: List[AgentManagerQueue[Policy]] = []
         self.trajectory_queues: List[AgentManagerQueue[Trajectory]] = []

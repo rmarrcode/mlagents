@@ -645,7 +645,6 @@ class TrainerSettings(ExportableSettings):
     default_override: ClassVar[Optional["TrainerSettings"]] = None
     trainer_type: TrainerType = TrainerType.PPO
     hyperparameters: HyperparamSettings = attr.ib()
-    load_critic_only: bool = False
 
     @hyperparameters.default
     def _set_default_hyperparameters(self):

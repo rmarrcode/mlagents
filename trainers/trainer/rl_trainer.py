@@ -58,7 +58,7 @@ class RLTrainer(Trainer):
         self._next_save_step = 0
         self._next_summary_step = 0
         self.model_saver = self.create_model_saver(
-            self.trainer_settings, self.artifact_path, self.load
+            self.trainer_settings, self.artifact_path, self.load, self.load_critic_only
         )
         self._has_warned_group_rewards = False
 
@@ -130,10 +130,10 @@ class RLTrainer(Trainer):
 
     @staticmethod
     def create_model_saver(
-        trainer_settings: TrainerSettings, model_path: str, load: bool
+        trainer_settings: TrainerSettings, model_path: str, load: bool, load_critic_only: bool
     ) -> BaseModelSaver:
         model_saver = TorchModelSaver(  # type: ignore
-            trainer_settings, model_path, load
+            trainer_settings, model_path, load, load_critic_only
         )
         return model_saver
 

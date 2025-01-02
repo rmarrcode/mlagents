@@ -21,13 +21,14 @@ class TorchModelSaver(BaseModelSaver):
     """
 
     def __init__(
-        self, trainer_settings: TrainerSettings, model_path: str, load: bool = False
+        self, trainer_settings: TrainerSettings, model_path: str, load: bool = False, load_critic_only: bool = False
     ):
         super().__init__()
         self.model_path = model_path
         self.initialize_path = trainer_settings.init_path
         self._keep_checkpoints = trainer_settings.keep_checkpoints
         self.load = load
+        self.load_critic_only = load_critic_only
 
         self.policy: Optional[TorchPolicy] = None
         self.exporter: Optional[ModelSerializer] = None
@@ -68,11 +69,18 @@ class TorchModelSaver(BaseModelSaver):
         # Initialize/Load registered self.policy by default.
         # If given input argument policy, use the input policy instead.
         # This argument is mainly for initialization of the ghost trainer's fixed policy.
-        reset_steps = not self.load
+        reset_steps = not (self.load or self.load_critic_only)
         if self.initialize_path is not None:
             logger.info(f"Initializing from {self.initialize_path}.")
             self._load_model(
                 self.initialize_path, policy, reset_global_steps=reset_steps
+            )
+        elif self.load_critic_only:
+            logger.info(f"Loading critic only from {self.model_path}.")
+            self._load_model(
+                os.path.join(self.model_path, DEFAULT_CHECKPOINT_NAME),
+                policy,
+                reset_global_steps=reset_steps,
             )
         elif self.load:
             logger.info(f"Resuming from {self.model_path}.")

@@ -23,6 +23,7 @@ class TrainerFactory:
         output_path: str,
         train_model: bool,
         load_model: bool,
+        load_critic_only: bool,
         seed: int,
         param_manager: EnvironmentParameterManager,
         init_path: str = None,
@@ -50,6 +51,7 @@ class TrainerFactory:
         self.init_path = init_path
         self.train_model = train_model
         self.load_model = load_model
+        self.load_critic_only = load_critic_only
         self.seed = seed
         self.param_manager = param_manager
         self.multi_gpu = multi_gpu
@@ -63,6 +65,7 @@ class TrainerFactory:
             self.output_path,
             self.train_model,
             self.load_model,
+            self.load_critic_only,
             self.ghost_controller,
             self.seed,
             self.param_manager,
@@ -76,6 +79,7 @@ class TrainerFactory:
         output_path: str,
         train_model: bool,
         load_model: bool,
+        load_critic_only: bool,
         ghost_controller: GhostController,
         seed: int,
         param_manager: EnvironmentParameterManager,
@@ -110,6 +114,7 @@ class TrainerFactory:
                 trainer_settings,
                 train_model,
                 load_model,
+                load_critic_only,
                 seed,
                 trainer_artifact_path,
             )

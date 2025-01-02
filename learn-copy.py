@@ -99,6 +99,7 @@ def run_training(run_seed: int, options: RunOptions, num_areas: int) -> None:
         elif checkpoint_settings.maybe_init_path is not None:
             setup_init_path(options.behaviors, checkpoint_settings.maybe_init_path)
 
+
         # Configure Tensorboard Writers and StatsReporter
         stats_writers = register_stats_writer_plugins(options)
         for sw in stats_writers:
@@ -124,8 +125,9 @@ def run_training(run_seed: int, options: RunOptions, num_areas: int) -> None:
         trainer_factory = TrainerFactory(
             trainer_config=options.behaviors,
             output_path=checkpoint_settings.write_path,
-            train_model=not checkpoint_settings.inference,
+            train_model=not checkpoint_settings.inference and not checkpoint_settings.load_critic_only,
             load_model=checkpoint_settings.resume,
+            load_critic_only=checkpoint_settings.load_critic_only,
             seed=run_seed,
             param_manager=env_parameter_manager,
             init_path=checkpoint_settings.maybe_init_path,

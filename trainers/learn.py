@@ -72,7 +72,6 @@ def run_training(run_seed: int, options: RunOptions, num_areas: int) -> None:
         run_logs_dir = checkpoint_settings.run_logs_dir
         port: Optional[int] = env_settings.base_port
 
-        print(options.behaviors['Seeker'].load_critic_only)
         # Don't check for existing data when loading critic only
         if not options.behaviors['Seeker'].load_critic_only:
             # Only enforce restart for full training runs
