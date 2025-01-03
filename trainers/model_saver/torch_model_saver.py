@@ -81,6 +81,7 @@ class TorchModelSaver(BaseModelSaver):
                 os.path.join(self.model_path, DEFAULT_CHECKPOINT_NAME),
                 policy,
                 reset_global_steps=reset_steps,
+                load_critic_only=True,
             )
         elif self.load:
             logger.info(f"Resuming from {self.model_path}.")
@@ -88,6 +89,7 @@ class TorchModelSaver(BaseModelSaver):
                 os.path.join(self.model_path, DEFAULT_CHECKPOINT_NAME),
                 policy,
                 reset_global_steps=reset_steps,
+                load_critic_only=False,
             )
 
     def _load_model(
@@ -95,6 +97,7 @@ class TorchModelSaver(BaseModelSaver):
         load_path: str,
         policy: Optional[TorchPolicy] = None,
         reset_global_steps: bool = False,
+        load_critic_only: bool = False,
     ) -> None:
         saved_state_dict = torch.load(load_path)
         if policy is None:
@@ -106,6 +109,13 @@ class TorchModelSaver(BaseModelSaver):
 
         for name, mod in modules.items():
             try:
+                if load_critic_only and "policy" in name.lower():
+                    logger.warning(f"Skipping {name} module due to load_critic_only")
+                    continue
+                # if load_critic_only and "critic" in name.lower():
+                #     logger.warning(f"Skipping {name} module due to load_critic_only")
+                #     continue
+
                 if isinstance(mod, torch.nn.Module):
                     missing_keys, unexpected_keys = mod.load_state_dict(
                         saved_state_dict[name], strict=False

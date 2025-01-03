@@ -336,42 +336,6 @@ class PPOTrainer(RLTrainer):
             # Needed to resume loads properly
             self._step = policy.get_current_step()
 
-    # def load_critic_only(self, parsed_behavior_id: BehaviorIdentifiers) -> None:
-    #     """
-    #     Loads only the critic from a previous run's checkpoint
-    #     """
-    #     critic_path = os.path.join(self.model_saver.model_path, "checkpoint.pt")
-    #     print(f"Looking for critic at: {critic_path}")  # Debug print
-        
-    #     if os.path.exists(critic_path):
-    #         try:
-    #             checkpoint = torch.load(critic_path)
-    #             print("\nCheckpoint keys:", checkpoint.keys())
-    #             print("\nCritic state dict:", checkpoint['Optimizer:critic'].keys())
-    #             self.optimizer.critic.load_state_dict(checkpoint['Optimizer:critic'])
-    #             self.optimizer.critic.eval()
-    #             print(f"Successfully loaded critic from {critic_path}")
-    #         except Exception as e:
-    #             print(f"Failed to load critic: {e}")
-    #             raise
-    #     else:
-    #         print(f"No critic checkpoint found at {critic_path}")
-    #         raise FileNotFoundError(f"Critic checkpoint not found at {critic_path}")
-
-    # def _verify_critic(self):
-    #     """
-    #     Verify that critic was loaded properly
-    #     """
-    #     # Check if weights are non-zero
-    #     has_weights = False
-    #     for param in self.optimizer.critic.parameters():
-    #         if torch.any(param != 0):
-    #             has_weights = True
-    #             break
-        
-    #     if not has_weights:
-    #         raise ValueError("Critic loaded with all zero weights!")
-
     def get_policy(self, name_behavior_id: str) -> Policy:
         """
         Gets policy from trainer associated with name_behavior_id

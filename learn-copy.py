@@ -125,7 +125,7 @@ def run_training(run_seed: int, options: RunOptions, num_areas: int) -> None:
         trainer_factory = TrainerFactory(
             trainer_config=options.behaviors,
             output_path=checkpoint_settings.write_path,
-            train_model=not checkpoint_settings.inference and not checkpoint_settings.load_critic_only,
+            train_model=not checkpoint_settings.inference, 
             load_model=checkpoint_settings.resume,
             load_critic_only=checkpoint_settings.load_critic_only,
             seed=run_seed,

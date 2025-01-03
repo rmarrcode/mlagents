@@ -155,9 +155,6 @@ class RLTrainer(Trainer):
             logger.warning(
                 "Trainer has multiple policies, but default behavior only saves the first."
             )
-        export_path, auxillary_paths = self.model_saver.save_checkpoint(
-            self.brain_name, self._step
-        )
         new_checkpoint = ModelCheckpoint(
             int(self._step),
             export_path,

@@ -198,7 +198,7 @@ class TrainerController:
                 # the exception so we exit the process with an return code of 1.
                 raise ex
         finally:
-            if self.train_model:
+            if self.train_model and not self.trainer_factory.load_critic_only:
                 self._save_models()
 
     def end_trainer_episodes(self) -> None:
