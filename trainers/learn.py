@@ -270,8 +270,6 @@ def run_cli(options: RunOptions) -> None:
     if options.env_settings.seed == -1:
         run_seed = np.random.randint(0, 10000)
         logger.debug(f"run_seed set to {run_seed}")
-
-    options.behaviors['Seeker'].load_critic_only = True  # Add this line
     
     run_training(run_seed, options, num_areas)
 

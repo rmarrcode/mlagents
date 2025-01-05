@@ -155,6 +155,9 @@ class RLTrainer(Trainer):
             logger.warning(
                 "Trainer has multiple policies, but default behavior only saves the first."
             )
+        export_path, auxillary_paths = self.model_saver.save_checkpoint(
+            self.brain_name, self._step
+        )
         new_checkpoint = ModelCheckpoint(
             int(self._step),
             export_path,
@@ -242,7 +245,7 @@ class RLTrainer(Trainer):
         write the summary. This logic ensures summaries are written on the update step and not in between.
         :param step_after_process: the step count after processing the next trajectory.
         """
-        #print(f'step {step_after_process}')
+        print(f'step {step_after_process}')
         if self._next_summary_step == 0:  # Don't write out the first one
             self._next_summary_step = self._get_next_interval_step(self.summary_freq)
             #self._load_critic()
