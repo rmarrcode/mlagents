@@ -109,9 +109,9 @@ class TorchModelSaver(BaseModelSaver):
 
         for name, mod in modules.items():
             try:
-                # if load_critic_only and "policy" in name.lower():
-                #     logger.warning(f"Skipping {name} module due to load_critic_only")
-                #     continue
+                if load_critic_only and "policy" in name.lower():
+                    logger.warning(f"Skipping {name} module due to load_critic_only")
+                    continue
 
                 if isinstance(mod, torch.nn.Module):
                     missing_keys, unexpected_keys = mod.load_state_dict(
