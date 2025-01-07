@@ -541,8 +541,19 @@ class ValueNetwork(nn.Module, Critic):
             inputs, actions, memories, sequence_length
         )
         output = self.value_heads(encoding)
-        output
         return output, memories
+
+
+class SplitValueNetwork(nn.Module):
+    def __init__(self, stream_names: List[str], position_obs_spec: ObservationSpec, crumbs_obs_spec: ObservationSpec, network_settings: NetworkSettings):
+        super().__init__()
+        self.position_network = ValueNetwork(stream_names, position_obs_spec, network_settings)
+        self.crumbs_network = ValueNetwork(stream_names, crumbs_obs_spec, network_settings) 
+
+    def forward(self, inputs: List[torch.Tensor], memories: Optional[torch.Tensor] = None, sequence_length: int = 1) -> Tuple[Dict[str, torch.Tensor], torch.Tensor]:
+        position_output, position_memories = self.position_network(inputs, memories, sequence_length)
+        crumbs_output, crumbs_memories = self.crumbs_network(inputs, memories, sequence_length)
+        return {**position_output, **crumbs_output}, position_memories
 
 
 class Actor(abc.ABC):
