@@ -1,20 +1,23 @@
 {
     "version": "0.2.0",
     "configurations": [
-      {
-        "name": "Python: Remote Attach",
-        "type": "python",
-        "request": "attach",
-        "connect": {
-          "host": "localhost",  // Use the IP address if the remote process is on a different machine
-          "port": 5678          // The port used by debugpy in the running process
-        },
-        "pathMappings": [
-          {
-            "localRoot": "C:\\Users\\rmarr\\Documents",  // Local path of the source code in your workspace
-            "remoteRoot": "C:\\Users\\rmarr\\Documents"                   // Remote path where the Python code is running
-          }
-        ]
-      }
+        {
+            "name": "ML-Agents Training",
+            "type": "python",
+            "request": "launch",
+            "program": ".visibility-game-env/lib/python3.8/site-packages/mlagents/learn-copy.py",
+            "args": [
+                "config/breadcrumb-exercise-ppo.yaml",
+                "--env=build/decay/visibility-game.x86_64",
+                "--run-id=dispose",
+                "--force",
+                "--dual-critic",
+                "--load-critic-only"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "cwd": "/home/rmarr/Projects/visibility-game-env",
+            "python": "/home/rmarr/Projects/visibility-game-env/.visibility-game-env/bin/python"
+        }
     ]
 }

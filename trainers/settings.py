@@ -663,6 +663,7 @@ class TrainerSettings(ExportableSettings):
     threaded: bool = False
     self_play: Optional[SelfPlaySettings] = None
     behavioral_cloning: Optional[BehavioralCloningSettings] = None
+    dual_critic: bool = parser.get_default("dual_critic")
 
     cattr.register_structure_hook_func(
         lambda t: t == Dict[RewardSignalType, RewardSignalSettings],
@@ -775,6 +776,7 @@ class CheckpointSettings:
     inference: bool = parser.get_default("inference")
     results_dir: str = parser.get_default("results_dir")
     load_critic_only: bool = parser.get_default("load_critic_only")
+    dual_critic: bool = parser.get_default("dual_critic")
 
     @property
     def write_path(self) -> str:
@@ -952,6 +954,7 @@ class RunOptions(ExportableSettings):
 
         final_runoptions = RunOptions.from_dict(configured_dict)
         final_runoptions.checkpoint_settings.prioritize_resume_init()
+        
         # Need check to bypass type checking but keep structure on dict working
         if isinstance(final_runoptions.behaviors, TrainerSettings.DefaultTrainerDict):
             # configure whether or not we should require all behavior names to be found in the config YAML
@@ -965,6 +968,12 @@ class RunOptions(ExportableSettings):
                 final_runoptions.behaviors[
                     behaviour
                 ].network_settings.deterministic = argparse_args["deterministic"]
+
+        if "dual_critic" in _non_default_args:
+            for behaviour in final_runoptions.behaviors.keys():
+                final_runoptions.behaviors[
+                    behaviour
+                ].dual_critic = argparse_args["dual_critic"]
 
         return final_runoptions
 

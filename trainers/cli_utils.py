@@ -318,6 +318,12 @@ def _create_parser() -> argparse.ArgumentParser:
         action=StoreTrueWithDefault,
         help="Load only the critic network from checkpoint and initialize a new policy network",
     )
+    argparser.add_argument(
+        "--dual-critic",
+        default=False,
+        action=StoreTrueWithDefault,
+        help="Use dual critic network",
+    )
     return argparser
 
 

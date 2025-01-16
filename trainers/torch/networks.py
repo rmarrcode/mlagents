@@ -235,8 +235,6 @@ class NetworkBody(nn.Module):
     def memory_size(self) -> int:
         return self.lstm.memory_size if self.use_lstm else 0
 
-
-
     def forward(
         self,
         inputs: List[torch.Tensor],
@@ -544,16 +542,7 @@ class ValueNetwork(nn.Module, Critic):
         return output, memories
 
 
-class SplitValueNetwork(nn.Module):
-    def __init__(self, stream_names: List[str], position_obs_spec: ObservationSpec, crumbs_obs_spec: ObservationSpec, network_settings: NetworkSettings):
-        super().__init__()
-        self.position_network = ValueNetwork(stream_names, position_obs_spec, network_settings)
-        self.crumbs_network = ValueNetwork(stream_names, crumbs_obs_spec, network_settings) 
 
-    def forward(self, inputs: List[torch.Tensor], memories: Optional[torch.Tensor] = None, sequence_length: int = 1) -> Tuple[Dict[str, torch.Tensor], torch.Tensor]:
-        position_output, position_memories = self.position_network(inputs, memories, sequence_length)
-        crumbs_output, crumbs_memories = self.crumbs_network(inputs, memories, sequence_length)
-        return {**position_output, **crumbs_output}, position_memories
 
 
 class Actor(abc.ABC):
@@ -852,7 +841,6 @@ class SimpleActor(nn.Module, Actor):
     #             loss.backward()
     #             opt.step()
                 
-
 class SharedActorCritic(SimpleActor, Critic):
     def __init__(
         self,
@@ -885,6 +873,55 @@ class SharedActorCritic(SimpleActor, Critic):
         )
         return self.value_heads(encoding), memories_out
 
+
+# TODO: inherited classes not required
+class SplitValueSharedActorCritic(SimpleActor, Critic):
+    def __init__(
+        self,
+        observation_specs: List[ObservationSpec],
+        network_settings: NetworkSettings,
+        action_spec: ActionSpec,
+        position_obs_spec: ObservationSpec,
+        crumbs_obs_spec: ObservationSpec,
+        stream_names: List[str],
+        conditional_sigma: bool = False,
+        tanh_squash: bool = False
+    ):
+        self.use_lstm = network_settings.memory is not None
+        super().__init__(
+            observation_specs,
+            network_settings,
+            action_spec,
+            conditional_sigma,
+            tanh_squash,
+        )
+        self.stream_names = stream_names
+        self.value_heads = ValueHeads(stream_names, self.encoding_size)
+        self.position_network = NetworkBody(position_obs_spec, network_settings)
+        self.crumbs_network = NetworkBody(crumbs_obs_spec, network_settings)
+        # TODO get parameter for 12
+        # TODO: potentially make bigger
+        self.importance = nn.Linear(12, 2)
+
+    def critic_pass(
+        self,
+        inputs: List[torch.Tensor],
+        memories: Optional[torch.Tensor] = None,
+        sequence_length: int = 1,
+    ) -> Tuple[Dict[str, torch.Tensor], torch.Tensor]:
+        inputs_position = [inputs[0][:, :3]]
+        inputs_crumbs = [inputs[0][:, 3:]]
+        importance_weights = self.importance(inputs[0])
+        encoding_position, memories_out = self.position_network(
+            inputs_position, memories=memories, sequence_length=sequence_length
+        )
+        encoding_crumbs, memories_out = self.crumbs_network(
+            inputs_crumbs, memories=memories, sequence_length=sequence_length
+        )
+
+        combined_encoding = importance_weights[:,0].view(-1, 1) * encoding_position + \
+        importance_weights[:,1].view(-1, 1) * encoding_crumbs
+        return self.value_heads(combined_encoding), memories_out
 
 class GlobalSteps(nn.Module):
     def __init__(self):

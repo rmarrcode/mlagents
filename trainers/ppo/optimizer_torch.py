@@ -31,31 +31,31 @@ class TorchPPOOptimizer(TorchOptimizer):
         reward_signal_configs = trainer_settings.reward_signals
         reward_signal_names = [key.value for key, _ in reward_signal_configs.items()]
 
-        dual_critic = True
-        position_obs_spec = ObservationSpec(
-            name="position_observation",
-            shape=(3,),  # 3D vector
-            dimension_property=DimensionProperty.VECTOR,  
-            observation_type=ObservationType.DEFAULT
-        )
-        crumbs_obs_spec = ObservationSpec(
-            name="crumbs_observation",
-            shape=(9,),  # 3D vector
-            dimension_property=DimensionProperty.VECTOR,  
-            observation_type=ObservationType.DEFAULT
-        )
-        if dual_critic:
-            self.critic_position = ValueNetwork(
-                reward_signal_names,
-                position_obs_spec,
-                network_settings=trainer_settings.network_settings,
-            )
-            self.critic_crumbs = ValueNetwork(
-                reward_signal_names,
-                crumbs_obs_spec,
-                network_settings=trainer_settings.network_settings,
-            )
-        elif policy.shared_critic:
+        # dual_critic = True
+        # position_obs_spec = ObservationSpec(
+        #     name="position_observation",
+        #     shape=(3,),  # 3D vector
+        #     dimension_property=DimensionProperty.VECTOR,  
+        #     observation_type=ObservationType.DEFAULT
+        # )
+        # crumbs_obs_spec = ObservationSpec(
+        #     name="crumbs_observation",
+        #     shape=(9,),  # 3D vector
+        #     dimension_property=DimensionProperty.VECTOR,  
+        #     observation_type=ObservationType.DEFAULT
+        # )
+        # if dual_critic:
+        #     self.critic_position = ValueNetwork(
+        #         reward_signal_names,
+        #         position_obs_spec,
+        #         network_settings=trainer_settings.network_settings,
+        #     )
+        #     self.critic_crumbs = ValueNetwork(
+        #         reward_signal_names,
+        #         crumbs_obs_spec,
+        #         network_settings=trainer_settings.network_settings,
+        #     )
+        if policy.shared_critic:
             self._critic = policy.actor
         else:
             self._critic = ValueNetwork(

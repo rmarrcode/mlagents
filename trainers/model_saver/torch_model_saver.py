@@ -112,6 +112,15 @@ class TorchModelSaver(BaseModelSaver):
                 if load_critic_only and "policy" in name.lower():
                     logger.warning(f"Skipping {name} module due to load_critic_only")
                     continue
+                
+                # For SplitValueSharedActorCritic, only load position_network
+                if name == "Optimizer:critic":
+                    # Only load position_network parameters
+                    position_state_dict = {k: v for k, v in saved_state_dict[name].items() 
+                                         if 'position_network' in k}
+                    mod.load_state_dict(position_state_dict, strict=False)
+                    logger.info("Loaded position_network only from critic")
+                    continue
 
                 if isinstance(mod, torch.nn.Module):
                     missing_keys, unexpected_keys = mod.load_state_dict(

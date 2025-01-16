@@ -245,7 +245,6 @@ class RLTrainer(Trainer):
         write the summary. This logic ensures summaries are written on the update step and not in between.
         :param step_after_process: the step count after processing the next trajectory.
         """
-        print(f'step {step_after_process}')
         if self._next_summary_step == 0:  # Don't write out the first one
             self._next_summary_step = self._get_next_interval_step(self.summary_freq)
             #self._load_critic()

@@ -10,12 +10,14 @@ from mlagents_envs.base_env import DecisionSteps, BehaviorSpec
 from mlagents_envs.timers import timed
 
 from mlagents.trainers.settings import TrainerSettings
-from mlagents.trainers.torch.networks import SimpleActor, SharedActorCritic, GlobalSteps
+from mlagents.trainers.torch.networks import SimpleActor, SharedActorCritic, GlobalSteps, SplitValueSharedActorCritic
 
 from mlagents.trainers.torch.utils import ModelUtils
 from mlagents.trainers.buffer import AgentBuffer
 from mlagents.trainers.torch.agent_action import AgentAction
 from mlagents.trainers.torch.action_log_probs import ActionLogProbs
+
+from mlagents_envs.base_env import ObservationSpec, DimensionProperty, ObservationType
 
 EPSILON = 1e-7  # Small value to avoid divide by zero
 
@@ -53,7 +55,37 @@ class TorchPolicy(Policy):
             "Losses/Value Loss": "value_loss",
             "Losses/Policy Loss": "policy_loss",
         }
-        if separate_critic:
+        # TODO: move this
+        # TODO: maybe specify dimesntionproprty
+        position_obs_spec = [ObservationSpec(
+            name="position_observation",
+            shape=(3,),  # 3D vector
+            dimension_property=(DimensionProperty.NONE,),  # Must be a tuple
+            observation_type=ObservationType.DEFAULT
+        )]
+        crumbs_obs_spec = [ObservationSpec(
+            name="crumbs_observation",
+            shape=(9,),  # 3D vector
+            dimension_property=(DimensionProperty.NONE,),  # Must be a tuple
+            observation_type=ObservationType.DEFAULT
+        )]
+        if trainer_settings.dual_critic:
+            reward_signal_configs = trainer_settings.reward_signals
+            reward_signal_names = [
+                key.value for key, _ in reward_signal_configs.items()
+            ]
+            self.actor = SplitValueSharedActorCritic(
+                observation_specs=self.behavior_spec.observation_specs,
+                network_settings=trainer_settings.network_settings,
+                action_spec=behavior_spec.action_spec,
+                position_obs_spec=position_obs_spec,  # Already a list
+                crumbs_obs_spec=crumbs_obs_spec,     # Already a list
+                stream_names=reward_signal_names,
+                conditional_sigma=self.condition_sigma_on_obs,
+                tanh_squash=tanh_squash,
+            )
+            self.shared_critic = True
+        elif separate_critic:
             self.actor = SimpleActor(
                 observation_specs=self.behavior_spec.observation_specs,
                 network_settings=trainer_settings.network_settings,
