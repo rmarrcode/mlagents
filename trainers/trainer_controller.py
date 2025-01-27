@@ -40,6 +40,7 @@ class TrainerController:
         param_manager: EnvironmentParameterManager,
         train: bool,
         training_seed: int,
+        load_critic_only: str,
     ):
         """
         :param output_path: Path to save the model.
@@ -61,6 +62,7 @@ class TrainerController:
         self.param_manager = param_manager
         self.ghost_controller = self.trainer_factory.ghost_controller
         self.registered_behavior_ids: Set[str] = set()
+        self.load_critic_only = load_critic_only
 
         self.trainer_threads: List[threading.Thread] = []
         self.kill_trainers = False
@@ -138,6 +140,7 @@ class TrainerController:
             parsed_behavior_id,
             env_manager.training_behaviors[name_behavior_id],
             create_graph=True,
+            load_critic_only=self.load_critic_only
         )
         trainer.add_policy(parsed_behavior_id, policy)
 
@@ -167,7 +170,6 @@ class TrainerController:
 
     @timed
     def start_learning(self, env_manager: EnvManager) -> None:
-        print('start learning')
         self._create_output_path(self.output_path)
         try:
             # Initial reset

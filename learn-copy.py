@@ -141,6 +141,7 @@ def run_training(run_seed: int, options: RunOptions, num_areas: int) -> None:
             env_parameter_manager,
             not checkpoint_settings.inference,
             run_seed,
+            checkpoint_settings.load_critic_only
         )
 
     # Begin training

@@ -81,7 +81,7 @@ class TorchModelSaver(BaseModelSaver):
                 os.path.join(self.model_path, DEFAULT_CHECKPOINT_NAME),
                 policy,
                 reset_global_steps=reset_steps,
-                load_critic_only=True,
+                load_critic_only=self.load_critic_only,
             )
         elif self.load:
             logger.info(f"Resuming from {self.model_path}.")
@@ -97,7 +97,7 @@ class TorchModelSaver(BaseModelSaver):
         load_path: str,
         policy: Optional[TorchPolicy] = None,
         reset_global_steps: bool = False,
-        load_critic_only: bool = False,
+        load_critic_only: Union[bool, str] = False,
     ) -> None:
         saved_state_dict = torch.load(load_path)
         if policy is None:
@@ -109,18 +109,20 @@ class TorchModelSaver(BaseModelSaver):
 
         for name, mod in modules.items():
             try:
-                if load_critic_only and "policy" in name.lower():
-                    logger.warning(f"Skipping {name} module due to load_critic_only")
-                    continue
-                
-                # For SplitValueSharedActorCritic, only load position_network
-                if name == "Optimizer:critic":
-                    # Only load position_network parameters
-                    position_state_dict = {k: v for k, v in saved_state_dict[name].items() 
-                                         if 'position_network' in k}
-                    mod.load_state_dict(position_state_dict, strict=False)
-                    logger.info("Loaded position_network only from critic")
-                    continue
+                if load_critic_only:
+  
+                    # only use critic network
+                    if "policy" in name.lower():
+                        logger.warning(f"Skipping {name} module due to load_critic_only")
+                        continue
+                    
+                    # only use position_network from critic network
+                    if "position_only" in load_critic_only.lower() and "optimizer:critic" in name.lower():
+                        position_state_dict = {k: v for k, v in saved_state_dict[name].items() 
+                                            if 'position_network' in k}
+                        mod.load_state_dict(position_state_dict, strict=False)
+                        logger.info("Loaded position_network only from critic")
+                        continue
 
                 if isinstance(mod, torch.nn.Module):
                     missing_keys, unexpected_keys = mod.load_state_dict(

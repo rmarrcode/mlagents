@@ -5,7 +5,7 @@ from mlagents.trainers.exception import TrainerConfigError
 from mlagents_envs.environment import UnityEnvironment
 import argparse
 from mlagents_envs import logging_util
-
+from typing import Union
 logger = logging_util.get_logger(__name__)
 
 
@@ -73,6 +73,14 @@ class StoreTrueWithDefault(DetectDefault):
         setattr(namespace, self.dest, True)
         DetectDefault.non_default_args.add(self.dest)
 
+
+class StoreStringWithDefault(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        # If no value is provided, default to "critic_only"
+        if values is None:
+            values = "critic_only"
+        setattr(namespace, self.dest, values)
+        DetectDefault.non_default_args.add(self.dest)
 
 def _create_parser() -> argparse.ArgumentParser:
     argparser = argparse.ArgumentParser(
@@ -314,9 +322,16 @@ def _create_parser() -> argparse.ArgumentParser:
     )
     argparser.add_argument(
         "--load-critic-only",
-        default=False,
-        action=StoreTrueWithDefault,
-        help="Load only the critic network from checkpoint and initialize a new policy network",
+        type=str,
+        nargs='?',  
+        const="critic_only", 
+        default=None,  
+        action=StoreStringWithDefault,
+        help="Load only the critic network from checkpoint and initialize a new policy network. Options: \
+        default: load the entire critic network. \
+        position_only: only load the position_network from the critic network. \
+        position_bias: load the position_network from the critic network and add a bias to over-utilize the position_network. \
+        ",
     )
     argparser.add_argument(
         "--dual-critic",

@@ -285,7 +285,7 @@ class PPOTrainer(RLTrainer):
         return True
 
     def create_torch_policy(
-        self, parsed_behavior_id: BehaviorIdentifiers, behavior_spec: BehaviorSpec
+        self, parsed_behavior_id: BehaviorIdentifiers, behavior_spec: BehaviorSpec, load_critic_only: str
     ) -> TorchPolicy:
         """
         Creates a policy with a PyTorch backend and PPO hyperparameters
@@ -299,6 +299,7 @@ class PPOTrainer(RLTrainer):
             self.trainer_settings,
             condition_sigma_on_obs=False,  # Faster training for PPO
             separate_critic=True,  # Match network architecture with TF
+            load_critic_only=load_critic_only
         )
         return policy
 

@@ -775,7 +775,7 @@ class CheckpointSettings:
     train_model: bool = parser.get_default("train_model")
     inference: bool = parser.get_default("inference")
     results_dir: str = parser.get_default("results_dir")
-    load_critic_only: bool = parser.get_default("load_critic_only")
+    load_critic_only: str = parser.get_default("load_critic_only")
     dual_critic: bool = parser.get_default("dual_critic")
 
     @property
@@ -938,7 +938,7 @@ class RunOptions(ExportableSettings):
         # Override with CLI args
         # Keep deprecated --load working, TODO: remove
         argparse_args["resume"] = argparse_args["resume"] or argparse_args["load_model"]
-
+  
         for key, val in argparse_args.items():
             if key in DetectDefault.non_default_args:
                 if key in attr.fields_dict(CheckpointSettings):

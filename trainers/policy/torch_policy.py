@@ -31,6 +31,7 @@ class TorchPolicy(Policy):
         tanh_squash: bool = False,
         separate_critic: bool = True,
         condition_sigma_on_obs: bool = True,
+        load_critic_only: str = None,
     ):
         """
         Policy that uses a multilayer perceptron to map the observations to actions. Could
@@ -83,6 +84,8 @@ class TorchPolicy(Policy):
                 stream_names=reward_signal_names,
                 conditional_sigma=self.condition_sigma_on_obs,
                 tanh_squash=tanh_squash,
+                #TODO FIX
+                load_critic_only=load_critic_only
             )
             self.shared_critic = True
         elif separate_critic:

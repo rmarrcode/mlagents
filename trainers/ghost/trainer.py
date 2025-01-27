@@ -337,6 +337,7 @@ class GhostTrainer(Trainer):
         parsed_behavior_id: BehaviorIdentifiers,
         behavior_spec: BehaviorSpec,
         create_graph: bool = False,
+        load_critic_only: str = None,
     ) -> Policy:
         """
         Creates policy with the wrapped trainer's create_policy function
@@ -346,7 +347,7 @@ class GhostTrainer(Trainer):
         wrapped trainer to be trained.
         """
         policy = self.trainer.create_policy(
-            parsed_behavior_id, behavior_spec, create_graph=True
+            parsed_behavior_id, behavior_spec, create_graph=True, load_critic_only=load_critic_only
         )
         team_id = parsed_behavior_id.team_id
         self.controller.subscribe_team_id(team_id, self)

@@ -116,8 +116,9 @@ class RLTrainer(Trainer):
         parsed_behavior_id: BehaviorIdentifiers,
         behavior_spec: BehaviorSpec,
         create_graph: bool = False,
+        load_critic_only: str = None,
     ) -> Policy:
-        return self.create_torch_policy(parsed_behavior_id, behavior_spec)
+        return self.create_torch_policy(parsed_behavior_id, behavior_spec, load_critic_only)
 
     @abc.abstractmethod
     def create_torch_policy(

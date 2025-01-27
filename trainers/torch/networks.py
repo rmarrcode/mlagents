@@ -885,7 +885,8 @@ class SplitValueSharedActorCritic(SimpleActor, Critic):
         crumbs_obs_spec: ObservationSpec,
         stream_names: List[str],
         conditional_sigma: bool = False,
-        tanh_squash: bool = False
+        tanh_squash: bool = False,
+        load_critic_only: Optional[str] = None
     ):
         self.use_lstm = network_settings.memory is not None
         super().__init__(
@@ -902,6 +903,15 @@ class SplitValueSharedActorCritic(SimpleActor, Critic):
         # TODO get parameter for 12
         # TODO: potentially make bigger
         self.importance = nn.Linear(12, 2)
+
+        if load_critic_only == "position_only_bias":
+            self._initialize_importance_weights()
+
+    def _initialize_importance_weights(self):
+        with torch.no_grad():
+            self.importance.weight[:, :6] = 1.0  
+            self.importance.weight[:, 6:] = 0.1  
+            self.importance.bias[:] = 0.0  
 
     def critic_pass(
         self,
