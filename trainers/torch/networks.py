@@ -913,6 +913,17 @@ class SplitValueSharedActorCritic(SimpleActor, Critic):
             self.importance.weight[:, 6:] = 0.1  
             self.importance.bias[:] = 0.0  
 
+    def critic_pass_position(
+        self,
+        inputs: List[torch.Tensor]
+    ) -> Tuple[Dict[str, torch.Tensor], torch.Tensor]:
+        inputs_position = [inputs[0][:, :3]]
+        importance_weights = self.importance(inputs[0])
+        encoding_position, memories_out = self.position_network(
+            inputs_position, memories=memories, sequence_length=sequence_length
+        )
+        return self.value_heads(encoding_position)
+
     def critic_pass(
         self,
         inputs: List[torch.Tensor],

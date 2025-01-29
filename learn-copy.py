@@ -215,7 +215,9 @@ def create_environment_factory(
 def run_cli(options: RunOptions) -> None:
     wandb.init(
         project='visibility-game',
-        config = {}
+        config = {
+            'args': sys.argv[1:]
+        }
     )
     try:
         print(
