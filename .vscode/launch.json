@@ -9,9 +9,10 @@
             "args": [
                 "config/breadcrumb-exercise-ppo.yaml",
                 "--env=build/decay/visibility-game.x86_64",
-                "--run-id=dualrun1221",
+                "--run-id=newdualrun5",
                 "--dual-critic",
-                "--load-critic-only=default",
+                "--force",
+                "--load-critic-only=default"
             ],
             "console": "integratedTerminal",
             "justMyCode": false,
@@ -20,3 +21,4 @@
         }
     ]
 }
+

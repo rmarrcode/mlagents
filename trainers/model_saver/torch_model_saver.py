@@ -107,6 +107,7 @@ class TorchModelSaver(BaseModelSaver):
             modules = policy.get_modules()
         policy = cast(TorchPolicy, policy)
 
+        # TODO double check this
         for name, mod in modules.items():
             try:
                 if load_critic_only:

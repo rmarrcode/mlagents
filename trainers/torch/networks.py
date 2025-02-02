@@ -902,7 +902,14 @@ class SplitValueSharedActorCritic(SimpleActor, Critic):
         self.crumbs_network = NetworkBody(crumbs_obs_spec, network_settings)
         # TODO get parameter for 12
         # TODO: potentially make bigger
-        self.importance = nn.Linear(12, 2)
+        network_settings_importance = NetworkSettings(
+            deterministic=False,
+            memory=None,
+            hidden_units=2,
+            num_layers=2,
+        )
+        self.importance_network = NetworkBody(observation_specs, network_settings_importance)
+        #self.importance = nn.Linear(12, 2)
 
         if load_critic_only == "position_only_bias":
             self._initialize_importance_weights()
@@ -915,14 +922,17 @@ class SplitValueSharedActorCritic(SimpleActor, Critic):
 
     def critic_pass_position(
         self,
-        inputs: List[torch.Tensor]
+        inputs: List[torch.Tensor],
+        memories: Optional[torch.Tensor] = None,
+        sequence_length: int = 1,
     ) -> Tuple[Dict[str, torch.Tensor], torch.Tensor]:
+        # TODO dont index [0]
         inputs_position = [inputs[0][:, :3]]
-        importance_weights = self.importance(inputs[0])
         encoding_position, memories_out = self.position_network(
             inputs_position, memories=memories, sequence_length=sequence_length
         )
-        return self.value_heads(encoding_position)
+
+        return self.value_heads(encoding_position), memories_out
 
     def critic_pass(
         self,
@@ -930,9 +940,11 @@ class SplitValueSharedActorCritic(SimpleActor, Critic):
         memories: Optional[torch.Tensor] = None,
         sequence_length: int = 1,
     ) -> Tuple[Dict[str, torch.Tensor], torch.Tensor]:
+        # TODO dont index [0]
         inputs_position = [inputs[0][:, :3]]
         inputs_crumbs = [inputs[0][:, 3:]]
-        importance_weights = self.importance(inputs[0])
+        importance_weights = self.importance_network([inputs[0]])[0]
+        importance_weights = F.softmax(importance_weights, dim=1)
         encoding_position, memories_out = self.position_network(
             inputs_position, memories=memories, sequence_length=sequence_length
         )
