@@ -915,10 +915,7 @@ class SplitValueSharedActorCritic(SimpleActor, Critic):
             self._initialize_importance_weights()
 
     def _initialize_importance_weights(self):
-        with torch.no_grad():
-            self.importance.weight[:, :6] = 1.0  
-            self.importance.weight[:, 6:] = 0.1  
-            self.importance.bias[:] = 0.0  
+        pass
 
     def critic_pass_position(
         self,
