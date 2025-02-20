@@ -951,6 +951,8 @@ class SplitValueSharedActorCritic(SimpleActor, Critic):
 
         combined_encoding = importance_weights[:,0].view(-1, 1) * encoding_position + \
         importance_weights[:,1].view(-1, 1) * encoding_crumbs
+
+        combined_encoding = encoding_position + encoding_crumbs
         return self.value_heads(combined_encoding), memories_out
 
 class GlobalSteps(nn.Module):
