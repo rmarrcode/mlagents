@@ -1,4 +1,4 @@
-from typing import Dict, cast
+from typing import Dict, cast, List
 from mlagents.torch_utils import torch, default_device
 
 from mlagents.trainers.buffer import AgentBuffer, BufferKey, RewardSignalUtil
@@ -14,7 +14,8 @@ from mlagents.trainers.torch.utils import ModelUtils
 from mlagents.trainers.trajectory import ObsUtil
 
 from mlagents_envs.base_env import ObservationSpec, DimensionProperty, ObservationType
-
+import wandb
+import torch.nn.functional as F
 
 class TorchPPOOptimizer(TorchOptimizer):
     def __init__(self, policy: TorchPolicy, trainer_settings: TrainerSettings):
@@ -207,6 +208,22 @@ class TorchPPOOptimizer(TorchOptimizer):
             update_stats.update(reward_provider.update(batch))
 
         return update_stats
+
+    def get_target_actions(self, states: List[torch.Tensor]) -> torch.Tensor:
+        """
+        Generate target actions based on the critic's value estimates.
+        :param states: A list of state tensors for which to generate target actions.
+        :return: A tensor of target actions.
+        """
+        with torch.no_grad():
+            # Compute value estimates for the given states
+            value_estimates, _ = self.critic.critic_pass(states)
+            # Example: Select actions that maximize the value estimates
+            # Assuming discrete actions, select the action with the highest value
+            # If continuous, you might need a different approach
+            target_actions = torch.argmax(value_estimates['extrinsic'], dim=1)
+
+        return target_actions
 
     def get_modules(self):
         modules = {

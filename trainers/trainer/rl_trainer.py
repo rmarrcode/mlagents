@@ -255,7 +255,7 @@ class RLTrainer(Trainer):
             self._write_summary(self._next_summary_step)
             #self._save_policy()
             #self._save_critic()
-            self._record_networks()
+            #self._record_networks()
 
     def _append_to_update_buffer(self, agentbuffer_trajectory: AgentBuffer) -> None:
         """

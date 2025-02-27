@@ -109,6 +109,7 @@ class TorchModelSaver(BaseModelSaver):
 
         # TODO double check this
         for name, mod in modules.items():
+            print(f"Considering {name}")
             try:
                 if load_critic_only:
   
@@ -123,9 +124,16 @@ class TorchModelSaver(BaseModelSaver):
                                             if 'position_network' in k}
                         mod.load_state_dict(position_state_dict, strict=False)
                         logger.info("Loaded position_network only from critic")
+
+                        # Load the importance network from the specified path
+                        importance_network_path = "/home/rmarr/Projects/visibility-game-env/informed_init/bias_importance.pt"
+                        importance_state_dict = torch.load(importance_network_path)
+                        mod.importance_network.load_state_dict(importance_state_dict, strict=False)
+                        logger.info("Loaded importance_network from informed_init")
                         continue
 
                 if isinstance(mod, torch.nn.Module):
+                    logger.info(f"Loaded {name}")
                     missing_keys, unexpected_keys = mod.load_state_dict(
                         saved_state_dict[name], strict=False
                     )

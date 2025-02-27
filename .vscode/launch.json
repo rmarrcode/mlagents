@@ -12,7 +12,7 @@
                 "--run-id=dispose",
                 "--dual-critic",
                 "--force",
-                "--load-critic-only=position-only"
+                "--load-critic-only=default"
             ],
             "console": "integratedTerminal",
             "justMyCode": false,

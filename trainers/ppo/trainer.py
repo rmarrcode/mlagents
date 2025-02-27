@@ -21,6 +21,8 @@ from mlagents.trainers.trajectory import Trajectory
 from mlagents.trainers.behavior_id_utils import BehaviorIdentifiers
 from mlagents.trainers.settings import TrainerSettings, PPOSettings
 from mlagents.trainers.torch.agent_action import AgentAction
+import torch.nn.functional as F
+import wandb
 
 logger = get_logger(__name__)
 
@@ -63,70 +65,7 @@ class PPOTrainer(RLTrainer):
         )
         self.seed = seed
         self.policy: Policy = None  # type: ignore
-
-    def _record_networks(self):
-        #policy_data = {}
-        value_data = {}
-        # states = torch.zeros((400, 12))
-        # it = 0
-        # for x_off in range(0, 20, 1):
-        #     for z_off in range(0, 20, 1):
-        #         states[it] = torch.cat( (torch.tensor([(x_off-10) + 0.5, 0.5, (z_off-10) + 0.5]), torch.zeros(9)), dim=0)
-        #         it = it+1
-        states = [torch.tensor([[(i-10) + 0.5, 0.5, (j-10)+0.5] + [0]*9 for i in range(20) for j in range(20)])]
-        # actions = AgentAction(continuous_tensor=torch.tensor([]), 
-        #                       discrete_list=[torch.tensor([0,1,2,3,4] * 100)])
-        actions = AgentAction(continuous_tensor=torch.tensor([]), 
-                            discrete_list=[torch.tensor([])])     
-        act_masks = torch.full((100, 5), 1)
-        # policy_data['states'] = states[0].tolist()
-        # log_probs, entropy = self.optimizer.policy.evaluate_actions(
-        #     states,
-        #     masks=act_masks,
-        #     actions=actions,
-        #     memories=[],
-        #     seq_len=1
-        # )
-        # policy_data['log_probs'] = log_probs.all_discrete_tensor.tolist()
-        # policy_data['entropy'] = entropy.tolist()
-        value_data['states'] = states[0].tolist()
-        values = self.optimizer.critic.critic_pass(
-            states,
-            memories=[],
-            sequence_length=1
-        )
-        # t = values[0]['extrinsic']
-        value_data['values'] = values[0]['extrinsic'].tolist()
-        base_path = '/home/rmarr/Projects/visibility-game-env/.visibility-game-env/lib/python3.8/site-packages/mlagents/results/network_results'
-        # with open(f'{base_path}/policy.json', 'w') as file:
-        #     json.dump(policy_data, file, indent=4)
-        with open(f'{base_path}/value.json', 'w') as file:
-            json.dump(value_data, file, indent=4) 
-
-    def _save_policy(self):
-        base_path = '/home/rmarr/Projects/visibility-game-env/.visibility-game-env/lib/python3.8/site-packages/mlagents/results/saved_models'
-        full_path_policy = f"{base_path}/policy"
-        self.optimizer.policy.actor.save(full_path_policy)
-        print('-----policy saved------')
-
-    def _load_policy(self):
-        base_path = '/home/rmarr/Projects/visibility-game-env/.visibility-game-env/lib/python3.8/site-packages/mlagents/results/saved_models/600reward'
-        full_path_policy = f"{base_path}/policy"
-        self.optimizer.policy.actor.load(full_path_policy)
-        print('-----policy loaded------')
-
-    def _save_critic(self):
-        base_path = '/home/rmarr/Projects/visibility-game-env/.visibility-game-env/lib/python3.8/site-packages/mlagents/results/'
-        full_path_critic = f"{base_path}/critic"
-        self.optimizer.critic.save(full_path_critic)
-        print('-----critic saved------')
-
-    def _load_critic(self):
-        base_path = '/home/rmarr/Projects/visibility-game-env/.visibility-game-env/lib/python3.8/site-packages/mlagents/results/saved_models/600reward/'
-        full_path_critic = f"{base_path}/critic"
-        self.optimizer.critic.load(full_path_critic)
-        print('-----critic loaded------')
-
+    
     def _process_trajectory(self, trajectory: Trajectory) -> None:
         """
         Takes a trajectory and processes it, putting it into the update buffer.
@@ -308,34 +247,71 @@ class PPOTrainer(RLTrainer):
             cast(TorchPolicy, self.policy), self.trainer_settings  # type: ignore
         )  # type: ignore
 
+    # TODO this can be more complicated
+    def generate_states(self):
+        return [torch.tensor([ [(i-10) + 0.5, 0.5, (j-10)+0.5] + [0]*9 for i in range(20) for j in range(20)])]
+
+    def pretrain_actor(self, num_epochs: int = 1000, learning_rate: float = 0.001):
+        print("Pretraining actor...")
+        """
+        Pretrain the actor using the critic's information.
+        :param num_epochs: Number of epochs to pretrain.
+        :param learning_rate: Learning rate for the optimizer.
+        """
+        # Initialize optimizer for the actor
+        local_optimizer = torch.optim.Adam(self.policy.actor.parameters(), lr=learning_rate)
+
+        for epoch in range(num_epochs):
+            # Generate states and target actions using the critic
+            states = self.generate_states()  # Implement this method to generate states
+            target_actions = self.optimizer.get_target_actions(states)
+
+            # Compute predicted actions using the actor
+            predicted_actions = self.optimizer.policy.actor(states)
+
+            # Define the loss function
+            loss = F.mse_loss(predicted_actions, target_actions)
+
+            # Optimize the actor
+            local_optimizer.zero_grad()
+            loss.backward()
+            local_optimizer.step()
+
+            # Log the loss
+            wandb.log({
+                'pretrain_actor_loss': loss.item()
+            })
+
     def add_policy(
             self, parsed_behavior_id: BehaviorIdentifiers, policy: Policy
         ) -> None:
-            """
-            Adds policy to trainer.
-            :param parsed_behavior_id: Behavior identifiers that the policy should belong to.
-            :param policy: Policy to associate with name_behavior_id.
-            """
-            if self.policy:
-                logger.warning(
-                    "Your environment contains multiple teams, but {} doesn't support adversarial games. Enable self-play to \
-                        train adversarial games.".format(
-                        self.__class__.__name__
-                    )
+        """
+        Adds policy to trainer.
+        :param parsed_behavior_id: Behavior identifiers that the policy should belong to.
+        :param policy: Policy to associate with name_behavior_id.
+        """
+        if self.policy:
+            logger.warning(
+                "Your environment contains multiple teams, but {} doesn't support adversarial games. Enable self-play to \
+                    train adversarial games.".format(
+                    self.__class__.__name__
                 )
-            self.policy = policy
-            self.policies[parsed_behavior_id.behavior_id] = policy
+            )
+        self.policy = policy
+        self.policies[parsed_behavior_id.behavior_id] = policy
 
-            self.optimizer = self.create_ppo_optimizer()
-            for _reward_signal in self.optimizer.reward_signals.keys():
-                self.collected_rewards[_reward_signal] = defaultdict(lambda: 0)
+        self.optimizer = self.create_ppo_optimizer()
+        for _reward_signal in self.optimizer.reward_signals.keys():
+            self.collected_rewards[_reward_signal] = defaultdict(lambda: 0)
 
-            self.model_saver.register(self.policy)
-            self.model_saver.register(self.optimizer)
-            self.model_saver.initialize_or_load()
+        self.model_saver.register(self.policy)
+        self.model_saver.register(self.optimizer)
+        self.model_saver.initialize_or_load()
 
-            # Needed to resume loads properly
-            self._step = policy.get_current_step()
+        #self.pretrain_actor()
+
+        # Needed to resume loads properly
+        self._step = self.policy.get_current_step()
 
     def get_policy(self, name_behavior_id: str) -> Policy:
         """
