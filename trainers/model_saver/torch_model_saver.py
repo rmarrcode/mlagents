@@ -109,6 +109,8 @@ class TorchModelSaver(BaseModelSaver):
 
         # TODO double check this
         for name, mod in modules.items():
+            if name.lower() == "global_step":
+                continue
             print(f"Considering {name}")
             try:
                 if load_critic_only:
