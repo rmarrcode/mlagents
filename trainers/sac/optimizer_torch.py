@@ -6,7 +6,7 @@ from mlagents_envs.logging_util import get_logger
 from mlagents.trainers.optimizer.torch_optimizer import TorchOptimizer
 from mlagents.trainers.policy.torch_policy import TorchPolicy
 from mlagents.trainers.settings import NetworkSettings
-from mlagents.trainers.torch.networks import ValueNetwork
+from mlagents.trainers.torch.networks import ValueNetwork, SplitValueNetwork
 from mlagents.trainers.torch.agent_action import AgentAction
 from mlagents.trainers.torch.action_log_probs import ActionLogProbs
 from mlagents.trainers.torch.utils import ModelUtils
@@ -17,6 +17,7 @@ from mlagents.trainers.exception import UnityTrainerException
 from mlagents.trainers.settings import TrainerSettings, SACSettings
 from contextlib import ExitStack
 from mlagents.trainers.trajectory import ObsUtil
+from mlagents_envs.base_env import ObservationSpec, DimensionProperty, ObservationType
 
 EPSILON = 1e-6  # Small value to avoid divide by zero
 
@@ -111,11 +112,34 @@ class TorchSACOptimizer(TorchOptimizer):
         reward_signal_names = [key.value for key, _ in reward_signal_configs.items()]
         if policy.shared_critic:
             raise UnityTrainerException("SAC does not support SharedActorCritic")
-        self._critic = ValueNetwork(
-            reward_signal_names,
-            policy.behavior_spec.observation_specs,
-            policy.network_settings,
-        )
+        position_obs_spec = [ObservationSpec(
+            name="position_observation",
+            shape=(3,),  # 3D vector
+            dimension_property=(DimensionProperty.NONE,),  # Must be a tuple
+            observation_type=ObservationType.DEFAULT
+        )]
+        crumbs_obs_spec = [ObservationSpec(
+            name="crumbs_observation",
+            shape=(9,),  # 3D vector
+            dimension_property=(DimensionProperty.NONE,),  # Must be a tuple
+            observation_type=ObservationType.DEFAULT
+        )]
+        if trainer_params.dual_critic:
+            self._critic = SplitValueNetwork(
+                reward_signal_names,
+                policy.behavior_spec.observation_specs,
+                position_obs_spec,
+                crumbs_obs_spec,
+                network_settings=trainer_params.network_settings,
+                load_critic_only=policy.load_critic_only
+            )
+        else:
+            self._critic = ValueNetwork(
+                reward_signal_names,
+                policy.behavior_spec.observation_specs,
+                policy.network_settings,
+            )
+
 
         hyperparameters: SACSettings = cast(SACSettings, trainer_params.hyperparameters)
         self.tau = hyperparameters.tau
@@ -147,11 +171,22 @@ class TorchSACOptimizer(TorchOptimizer):
             self._action_spec,
         )
 
-        self.target_network = ValueNetwork(
-            self.stream_names,
-            self.policy.behavior_spec.observation_specs,
-            policy_network_settings,
-        )
+        if trainer_params.dual_critic:
+            self.target_network = SplitValueNetwork(
+                reward_signal_names,
+                policy.behavior_spec.observation_specs,
+                position_obs_spec,
+                crumbs_obs_spec,
+                network_settings=trainer_params.network_settings,
+                load_critic_only=policy.load_critic_only
+            )
+        else:
+            self.target_network = ValueNetwork(
+                reward_signal_names,
+                policy.behavior_spec.observation_specs,
+                policy.network_settings,
+            )
+
         ModelUtils.soft_update(self._critic, self.target_network, 1.0)
 
         # We create one entropy coefficient per action, whether discrete or continuous.

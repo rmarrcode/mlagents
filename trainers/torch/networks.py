@@ -543,6 +543,8 @@ class SplitValueNetwork(nn.Module, Critic):
             hidden_units=2,
             num_layers=2,
         )
+        self.importance_network = NetworkBody(observation_specs, network_settings_importance)
+
         if network_settings.memory is not None:
             encoding_size = network_settings.memory.memory_size // 2
         else:
@@ -550,8 +552,23 @@ class SplitValueNetwork(nn.Module, Critic):
         self.value_heads = ValueHeads(stream_names, encoding_size, outputs_per_stream)
         #self.informed_init()
 
+        class network_body:
+            def __init__(self, outer):
+                self.outer = outer
+
+            def copy_normalization(self, other_network: "SplitValueNetwork") -> None:
+                self.outer.importance_network.copy_normalization(other_network)
+                self.outer.position_network.copy_normalization(other_network)
+                self.outer.crumbs_network.copy_normalization(other_network)
+
+        self.network_body = network_body(self)
+
     def update_normalization(self, buffer: AgentBuffer) -> None:
-        self.network_body.update_normalization(buffer)
+        self.importance_network.update_normalization(buffer)
+        self.position_network.update_normalization(buffer)
+        self.crumbs_network.update_normalization(buffer)    
+
+
 
     def save(self, model_name):
         torch.save(self.network_body, f"{model_name}.pth")
