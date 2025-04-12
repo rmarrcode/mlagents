@@ -7,7 +7,7 @@ from mlagents_envs.timers import timed
 from mlagents.trainers.policy.torch_policy import TorchPolicy
 from mlagents.trainers.optimizer.torch_optimizer import TorchOptimizer
 from mlagents.trainers.settings import TrainerSettings, PPOSettings
-from mlagents.trainers.torch.networks import ValueNetwork
+from mlagents.trainers.torch.networks import ValueNetwork, SplitValueNetwork
 from mlagents.trainers.torch.agent_action import AgentAction
 from mlagents.trainers.torch.action_log_probs import ActionLogProbs
 from mlagents.trainers.torch.utils import ModelUtils
@@ -33,18 +33,18 @@ class TorchPPOOptimizer(TorchOptimizer):
         reward_signal_names = [key.value for key, _ in reward_signal_configs.items()]
 
         # dual_critic = True
-        # position_obs_spec = ObservationSpec(
-        #     name="position_observation",
-        #     shape=(3,),  # 3D vector
-        #     dimension_property=DimensionProperty.VECTOR,  
-        #     observation_type=ObservationType.DEFAULT
-        # )
-        # crumbs_obs_spec = ObservationSpec(
-        #     name="crumbs_observation",
-        #     shape=(9,),  # 3D vector
-        #     dimension_property=DimensionProperty.VECTOR,  
-        #     observation_type=ObservationType.DEFAULT
-        # )
+        position_obs_spec = ObservationSpec(
+            name="position_observation",
+            shape=(3,),  # 3D vector
+            dimension_property=DimensionProperty.VECTOR,  
+            observation_type=ObservationType.DEFAULT
+        )
+        crumbs_obs_spec = ObservationSpec(
+            name="crumbs_observation",
+            shape=(9,),  # 3D vector
+            dimension_property=DimensionProperty.VECTOR,  
+            observation_type=ObservationType.DEFAULT
+        )
         # if dual_critic:
         #     self.critic_position = ValueNetwork(
         #         reward_signal_names,
@@ -59,11 +59,21 @@ class TorchPPOOptimizer(TorchOptimizer):
         if policy.shared_critic:
             self._critic = policy.actor
         else:
-            self._critic = ValueNetwork(
-                reward_signal_names,
-                policy.behavior_spec.observation_specs,
-                network_settings=trainer_settings.network_settings,
-            )
+            if trainer_settings.dual_critic:
+                self._critic = SplitValueNetwork(
+                    reward_signal_names,
+                    policy.behavior_spec.observation_specs,
+                    position_obs_spec,
+                    crumbs_obs_spec,
+                    network_settings=trainer_settings.network_settings,
+                    load_critic_only=policy.load_critic_only
+                )
+            else:
+                self._critic = ValueNetwork(
+                    reward_signal_names,
+                    policy.behavior_spec.observation_specs,
+                    network_settings=trainer_settings.network_settings,
+                )
             self._critic.to(default_device())
 
 
@@ -120,16 +130,17 @@ class TorchPPOOptimizer(TorchOptimizer):
         """
         current_epoch = self.policy.get_current_step()
         #TODO: move 50000 to a hyperparameter
-        if current_epoch < 50000:
-            # for param in self._critic.crumbs_network.parameters():
-            #     param.requires_grad = False
-            for param in self._critic.position_network.parameters():
-                param.requires_grad = False
-            for param in self._critic.importance_network.parameters():
-                param.requires_grad = False
-        else:
-            for param in self._critic.parameters():
-                param.requires_grad = True
+        # TODO make freeze critic a hyperparameter
+        # if current_epoch < 50000:
+        #     # for param in self._critic.crumbs_network.parameters():
+        #     #     param.requires_grad = False
+        #     for param in self._critic.position_network.parameters():
+        #         param.requires_grad = False
+        #     for param in self._critic.importance_network.parameters():
+        #         param.requires_grad = False
+        # else:
+        #     for param in self._critic.parameters():
+        #         param.requires_grad = True
 
         # Get decayed parameters
         decay_lr = self.decay_learning_rate.get_value(self.policy.get_current_step())

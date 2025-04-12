@@ -114,9 +114,9 @@ class TrainerFactory:
                 trainer_settings,
                 train_model,
                 load_model,
-                load_critic_only,
                 seed,
                 trainer_artifact_path,
+                load_critic_only,
             )
         elif trainer_type == TrainerType.POCA:
             trainer = POCATrainer(

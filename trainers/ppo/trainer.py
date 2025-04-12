@@ -37,9 +37,9 @@ class PPOTrainer(RLTrainer):
         trainer_settings: TrainerSettings,
         training: bool,
         load: bool,
-        load_critic_only: bool,
         seed: int,
         artifact_path: str,
+        load_critic_only: str = None
     ):
         """
         Responsible for collecting experiences and training PPO model.
@@ -56,9 +56,9 @@ class PPOTrainer(RLTrainer):
             trainer_settings,
             training,
             load,
-            load_critic_only,
             artifact_path,
             reward_buff_cap,
+            load_critic_only,
         )
         self.hyperparameters: PPOSettings = cast(
             PPOSettings, self.trainer_settings.hyperparameters

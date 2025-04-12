@@ -515,7 +515,87 @@ class ValueNetwork(nn.Module, Critic):
         return output, memories
 
 
+class SplitValueNetwork(nn.Module, Critic):
+    def __init__(
+        self,
+        stream_names: List[str],
+        observation_specs: List[ObservationSpec],
+        position_obs_spec: ObservationSpec,
+        crumbs_obs_spec: ObservationSpec,
+        network_settings: NetworkSettings,
+        encoded_act_size: int = 0,
+        outputs_per_stream: int = 1,
+        load_critic_only: Optional[str] = None
+    ):
 
+        # This is not a typo, we want to call __init__ of nn.Module
+        nn.Module.__init__(self)
+        # self.network_body = NetworkBody(
+        #     observation_specs, network_settings, encoded_act_size=encoded_act_size
+        # )
+        self.position_network = NetworkBody(position_obs_spec, network_settings)
+        self.crumbs_network = NetworkBody(crumbs_obs_spec, network_settings)
+        # TODO get parameter for 12
+        # TODO: potentially make bigger
+        network_settings_importance = NetworkSettings(
+            deterministic=False,
+            memory=None,
+            hidden_units=2,
+            num_layers=2,
+        )
+        if network_settings.memory is not None:
+            encoding_size = network_settings.memory.memory_size // 2
+        else:
+            encoding_size = network_settings.hidden_units
+        self.value_heads = ValueHeads(stream_names, encoding_size, outputs_per_stream)
+        #self.informed_init()
+
+    def update_normalization(self, buffer: AgentBuffer) -> None:
+        self.network_body.update_normalization(buffer)
+
+    def save(self, model_name):
+        torch.save(self.network_body, f"{model_name}.pth")
+
+    @property
+    def memory_size(self) -> int:
+        return self.network_body.memory_size
+
+    def critic_pass(
+        self,
+        inputs: List[torch.Tensor],
+        memories: Optional[torch.Tensor] = None,
+        sequence_length: int = 1,
+    ) -> Tuple[Dict[str, torch.Tensor], torch.Tensor]:
+        value_outputs, critic_mem_out = self.forward(
+            inputs, memories=memories, sequence_length=sequence_length
+        )
+        return value_outputs, critic_mem_out
+
+    def forward(
+        self,
+        inputs: List[torch.Tensor],
+        actions: Optional[torch.Tensor] = None,
+        memories: Optional[torch.Tensor] = None,
+        sequence_length: int = 1,
+    ) -> Tuple[Dict[str, torch.Tensor], torch.Tensor]:
+        # encoding, memories = self.network_body(
+        #     inputs, actions, memories, sequence_length
+        # )
+        inputs_position = [inputs[0][:, :3]]
+        inputs_crumbs = [inputs[0][:, 3:]]
+        importance_weights = self.importance_network([inputs[0]])[0]
+        importance_weights = F.softmax(importance_weights, dim=1)
+        encoding_position, memories_out = self.position_network(
+            inputs_position, memories=memories, sequence_length=sequence_length
+        )
+        encoding_crumbs, memories_out = self.crumbs_network(
+            inputs_crumbs, memories=memories, sequence_length=sequence_length
+        )
+        combined_encoding = importance_weights[:,0].view(-1, 1) * encoding_position + \
+        importance_weights[:,1].view(-1, 1) * encoding_crumbs
+
+        output = self.value_heads(combined_encoding)
+        return output, memories
 
 
 class Actor(abc.ABC):

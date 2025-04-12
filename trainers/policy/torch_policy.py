@@ -70,25 +70,26 @@ class TorchPolicy(Policy):
             dimension_property=(DimensionProperty.NONE,),  # Must be a tuple
             observation_type=ObservationType.DEFAULT
         )]
-        if trainer_settings.dual_critic:
-            reward_signal_configs = trainer_settings.reward_signals
-            reward_signal_names = [
-                key.value for key, _ in reward_signal_configs.items()
-            ]
-            self.actor = SplitValueSharedActorCritic(
-                observation_specs=self.behavior_spec.observation_specs,
-                network_settings=trainer_settings.network_settings,
-                action_spec=behavior_spec.action_spec,
-                position_obs_spec=position_obs_spec,  # Already a list
-                crumbs_obs_spec=crumbs_obs_spec,     # Already a list
-                stream_names=reward_signal_names,
-                conditional_sigma=self.condition_sigma_on_obs,
-                tanh_squash=tanh_squash,
-                #TODO FIX
-                load_critic_only=load_critic_only
-            )
-            self.shared_critic = True
-        elif separate_critic:
+        # if trainer_settings.dual_critic:
+        #     reward_signal_configs = trainer_settings.reward_signals
+        #     reward_signal_names = [
+        #         key.value for key, _ in reward_signal_configs.items()
+        #     ]
+        #     self.actor = SplitValueSharedActorCritic(
+        #         observation_specs=self.behavior_spec.observation_specs,
+        #         network_settings=trainer_settings.network_settings,
+        #         action_spec=behavior_spec.action_spec,
+        #         position_obs_spec=position_obs_spec,  # Already a list
+        #         crumbs_obs_spec=crumbs_obs_spec,     # Already a list
+        #         stream_names=reward_signal_names,
+        #         conditional_sigma=self.condition_sigma_on_obs,
+        #         tanh_squash=tanh_squash,
+        #         #TODO FIX
+        #         load_critic_only=load_critic_only
+        #     )
+        #     self.shared_critic = True
+        self.load_critic_only = load_critic_only
+        if separate_critic:
             self.actor = SimpleActor(
                 observation_specs=self.behavior_spec.observation_specs,
                 network_settings=trainer_settings.network_settings,
@@ -102,14 +103,24 @@ class TorchPolicy(Policy):
             reward_signal_names = [
                 key.value for key, _ in reward_signal_configs.items()
             ]
-            self.actor = SharedActorCritic(
-                observation_specs=self.behavior_spec.observation_specs,
-                network_settings=trainer_settings.network_settings,
-                action_spec=behavior_spec.action_spec,
-                stream_names=reward_signal_names,
-                conditional_sigma=self.condition_sigma_on_obs,
-                tanh_squash=tanh_squash,
-            )
+            if trainer_settings.dual_critic:
+                self.actor = SplitValueSharedActorCritic(
+                    observation_specs=self.behavior_spec.observation_specs,
+                    network_settings=trainer_settings.network_settings,
+                    action_spec=behavior_spec.action_spec,
+                    position_obs_spec=position_obs_spec,
+                    crumbs_obs_spec=crumbs_obs_spec,
+                    load_critic_only=load_critic_only
+                )
+            else:
+                self.actor = SharedActorCritic(
+                    observation_specs=self.behavior_spec.observation_specs,
+                    network_settings=trainer_settings.network_settings,
+                    action_spec=behavior_spec.action_spec,
+                    stream_names=reward_signal_names,
+                    conditional_sigma=self.condition_sigma_on_obs,
+                    tanh_squash=tanh_squash,
+                )
             self.shared_critic = True
 
         # Save the m_size needed for export

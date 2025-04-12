@@ -222,7 +222,7 @@ class SACTrainer(RLTrainer):
             )
 
     def create_torch_policy(
-        self, parsed_behavior_id: BehaviorIdentifiers, behavior_spec: BehaviorSpec
+        self, parsed_behavior_id: BehaviorIdentifiers, behavior_spec: BehaviorSpec, load_critic_only: str
     ) -> TorchPolicy:
         """
         Creates a policy with a PyTorch backend and SAC hyperparameters

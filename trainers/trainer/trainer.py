@@ -25,9 +25,9 @@ class Trainer(abc.ABC):
         trainer_settings: TrainerSettings,
         training: bool,
         load: bool,
-        load_critic_only: bool,
         artifact_path: str,
         reward_buff_cap: int = 1,
+        load_critic_only: bool = False
     ):
         """
         Responsible for collecting experiences and training a neural network model.
