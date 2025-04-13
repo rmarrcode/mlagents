@@ -95,18 +95,19 @@ class TorchPPOOptimizer(TorchOptimizer):
         :return: Results of update.
         """
         current_epoch = self.policy.get_current_step()
-        #TODO: move 50000 to a hyperparameter
+
+        # TODO: move 50000 to a hyperparameter
         # TODO make freeze critic a hyperparameter
-        # if current_epoch < 50000:
-        #     # for param in self._critic.crumbs_network.parameters():
-        #     #     param.requires_grad = False
-        #     for param in self._critic.position_network.parameters():
-        #         param.requires_grad = False
-        #     for param in self._critic.importance_network.parameters():
-        #         param.requires_grad = False
-        # else:
-        #     for param in self._critic.parameters():
-        #         param.requires_grad = True
+        if current_epoch < 50000:
+            # for param in self._critic.crumbs_network.parameters():
+            #     param.requires_grad = False
+            for param in self._critic.position_network.parameters():
+                param.requires_grad = False
+            for param in self._critic.importance_network.parameters():
+                param.requires_grad = False
+        else:
+            for param in self._critic.parameters():
+                param.requires_grad = True
 
         # Get decayed parameters
         decay_lr = self.decay_learning_rate.get_value(self.policy.get_current_step())

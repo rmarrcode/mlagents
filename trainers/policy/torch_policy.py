@@ -108,6 +108,7 @@ class TorchPolicy(Policy):
                     observation_specs=self.behavior_spec.observation_specs,
                     network_settings=trainer_settings.network_settings,
                     action_spec=behavior_spec.action_spec,
+                    stream_names=reward_signal_names,
                     position_obs_spec=position_obs_spec,
                     crumbs_obs_spec=crumbs_obs_spec,
                     load_critic_only=load_critic_only
