@@ -232,12 +232,13 @@ class PPOTrainer(RLTrainer):
         :param behavior_spec: specifications for policy construction
         :return policy
         """
+        # Default separate critic is False
         policy = TorchPolicy(
             self.seed,
             behavior_spec,
             self.trainer_settings,
             condition_sigma_on_obs=False,  # Faster training for PPO
-            separate_critic=True,  # Match network architecture with TF
+            separate_critic=False,  # Match network architecture with TF
             load_critic_only=load_critic_only
         )
         return policy
