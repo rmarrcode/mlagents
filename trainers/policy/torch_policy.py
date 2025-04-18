@@ -89,6 +89,7 @@ class TorchPolicy(Policy):
         #     )
         #     self.shared_critic = True
         self.load_critic_only = load_critic_only
+        print(f"separate_critic: {separate_critic}")
         if separate_critic:
             self.actor = SimpleActor(
                 observation_specs=self.behavior_spec.observation_specs,
