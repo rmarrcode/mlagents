@@ -32,8 +32,11 @@ class TorchPPOOptimizer(TorchOptimizer):
         reward_signal_configs = trainer_settings.reward_signals
         reward_signal_names = [key.value for key, _ in reward_signal_configs.items()]
 
+        # I separated parameters this may be incorrect
+        params = list(policy.actor.parameters())
         if policy.shared_critic:
             self._critic = policy.actor
+            params = list(self.policy.actor.parameters())
         else:
             self._critic = ValueNetwork(
                 reward_signal_names,
@@ -41,9 +44,8 @@ class TorchPPOOptimizer(TorchOptimizer):
                 network_settings=trainer_settings.network_settings,
             )
             self._critic.to(default_device())
+            params += list(self._critic.parameters())
 
-
-        params = list(self.policy.actor.parameters()) + list(self._critic.parameters())
         self.hyperparameters: PPOSettings = cast(
             PPOSettings, trainer_settings.hyperparameters
         )
@@ -96,12 +98,14 @@ class TorchPPOOptimizer(TorchOptimizer):
         """
         current_epoch = self.policy.get_current_step()
 
-        # for param in self._critic.crumbs_network.parameters():
-        #     param.requires_grad = False
-        # for param in self._critic.position_network.parameters():
-        #     param.requires_grad = False
-        # for param in self._critic.importance_network.parameters():
-        #     param.requires_grad = False
+        # if current_epoch < 50000:
+        #     # double check this is the right critic
+        #     for param in self._critic.crumbs_network.parameters():
+        #         param.requires_grad = False
+        #     for param in self._critic.position_network.parameters():
+        #         param.requires_grad = False
+        #     for param in self._critic.importance_network.parameters():
+        #         param.requires_grad = False
 
         # TODO: move 50000 to a hyperparameter
         # TODO make freeze critic a hyperparameter

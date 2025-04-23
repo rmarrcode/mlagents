@@ -847,9 +847,7 @@ class SimpleActor(nn.Module, Actor):
     #     with open(f'{base_path}\\value.json', 'w') as file:
     #         json.dump(value_data, file, indent=4)    
 
-   
-
-                
+        
 class SharedActorCritic(SimpleActor, Critic):
     def __init__(
         self,

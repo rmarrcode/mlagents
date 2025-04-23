@@ -69,7 +69,8 @@ class TorchModelSaver(BaseModelSaver):
         # Initialize/Load registered self.policy by default.
         # If given input argument policy, use the input policy instead.
         # This argument is mainly for initialization of the ghost trainer's fixed policy.
-        reset_steps = not (self.load or self.load_critic_only)
+        #reset_steps = not (self.load or self.load_critic_only)
+        reset_steps = not self.load
         if self.initialize_path is not None:
             logger.info(f"Initializing from {self.initialize_path}.")
             self._load_model(
@@ -109,12 +110,12 @@ class TorchModelSaver(BaseModelSaver):
 
         # TODO double check this
         for name, mod in modules.items():
-            if name.lower() == "global_step":
-                continue
+            # if name.lower() == "global_step":
+            #     continue
             print(f"Considering {name}")
             try:
                 if load_critic_only:
-  
+                    
                     # only use critic network
                     if "policy" in name.lower():
                         logger.warning(f"Skipping {name} module due to load_critic_only")
