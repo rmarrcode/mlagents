@@ -98,14 +98,14 @@ class TorchPPOOptimizer(TorchOptimizer):
         """
         current_epoch = self.policy.get_current_step()
 
-        # if current_epoch < 50000:
-        #     # double check this is the right critic
-        #     for param in self._critic.crumbs_network.parameters():
-        #         param.requires_grad = False
-        #     for param in self._critic.position_network.parameters():
-        #         param.requires_grad = False
-        #     for param in self._critic.importance_network.parameters():
-        #         param.requires_grad = False
+        #if current_epoch < 50000:
+            # double check this is the right critic
+        for param in self._critic.crumbs_network.parameters():
+            param.requires_grad = False
+        for param in self._critic.position_network.parameters():
+            param.requires_grad = False
+        for param in self._critic.importance_network.parameters():
+            param.requires_grad = False
 
         # TODO: move 50000 to a hyperparameter
         # TODO make freeze critic a hyperparameter

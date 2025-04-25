@@ -110,7 +110,7 @@ class ObservationEncoder(nn.Module):
         """
         encodes = []
         var_len_processor_inputs: List[Tuple[nn.Module, torch.Tensor]] = []
-
+        
         for idx, processor in enumerate(self.processors):
             if not isinstance(processor, EntityEmbedding):
                 # The input can be encoded without having to process other inputs
@@ -186,6 +186,7 @@ class NetworkBody(nn.Module):
         encoded_act_size: int = 0,
     ):
         super().__init__()
+
         self.normalize = network_settings.normalize
         self.use_lstm = network_settings.memory is not None
         self.h_size = network_settings.hidden_units
@@ -881,7 +882,6 @@ class SharedActorCritic(SimpleActor, Critic):
         return self.value_heads(encoding), memories_out
 
 
-# TODO: inherited classes not required
 class SplitValueSharedActorCritic(SimpleActor, Critic):
     def __init__(
         self,
@@ -949,6 +949,9 @@ class SplitValueSharedActorCritic(SimpleActor, Critic):
         inputs_crumbs = [inputs[0][:, 3:]]
         importance_weights = self.importance_network([inputs[0]])[0]
         importance_weights = F.softmax(importance_weights, dim=1)
+        #print(f'importance_weights: {importance_weights}')
+        for i in range(importance_weights.shape[0]):
+            print(f'importance_weights[{i}]: {importance_weights[i]}')
         encoding_position, memories_out = self.position_network(
             inputs_position, memories=memories, sequence_length=sequence_length
         )

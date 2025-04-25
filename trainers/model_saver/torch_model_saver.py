@@ -116,27 +116,32 @@ class TorchModelSaver(BaseModelSaver):
             try:
                 if load_critic_only:
                     
-                    # only use critic network
-                    if "policy" in name.lower():
-                        logger.warning(f"Skipping {name} module due to load_critic_only")
+                    # # only use critic network
+                    # if "policy" in name.lower():
+                    #     logger.warning(f"Skipping {name} module due to load_critic_only")
+                    #     continue
+                    if "default" in load_critic_only.lower() and ("optimizer:critic" in name.lower() or "policy" in name.lower()):
+                        dont_load = ['network_body', 'action_model']
+                        critic_state_dict = {k: v for k, v in saved_state_dict[name].items() if not any(x in k for x in dont_load)}
+                        mod.load_state_dict(critic_state_dict, strict=False)
+                        logger.info(f"Loaded {name}")
                         continue
-                    
-                    # only use position_network from critic network
-                    if "position_only" in load_critic_only.lower() and "optimizer:critic" in name.lower():
-                        position_state_dict = {k: v for k, v in saved_state_dict[name].items() 
-                                            if 'position_network' in k}
-                        mod.load_state_dict(position_state_dict, strict=False)
-                        logger.info("Loaded position_network only from critic")
 
-                        # Load the importance network from the specified path
-                        importance_network_path = "/home/rmarr/Projects/visibility-game-env/informed_init/bias_importance.pt"
-                        importance_state_dict = torch.load(importance_network_path)
-                        mod.importance_network.load_state_dict(importance_state_dict, strict=False)
-                        logger.info("Loaded importance_network from informed_init")
-                        continue
+                    # only use position_network from critic network
+                    # if "position_only" in load_critic_only.lower() and "optimizer:critic" in name.lower():
+                    #     position_state_dict = {k: v for k, v in saved_state_dict[name].items() 
+                    #                         if 'position_network' in k}
+                    #     mod.load_state_dict(position_state_dict, strict=False)
+                    #     logger.info("Loaded position_network only from critic")
+
+                    #     # Load the importance network from the specified path
+                    #     importance_network_path = "/home/rmarr/Projects/visibility-game-env/informed_init/bias_importance.pt"
+                    #     importance_state_dict = torch.load(importance_network_path)
+                    #     mod.importance_network.load_state_dict(importance_state_dict, strict=False)
+                    #     logger.info("Loaded importance_network from informed_init")
+                    #     continue
 
                 if isinstance(mod, torch.nn.Module):
-                    logger.info(f"Loaded {name}")
                     missing_keys, unexpected_keys = mod.load_state_dict(
                         saved_state_dict[name], strict=False
                     )
@@ -148,11 +153,11 @@ class TorchModelSaver(BaseModelSaver):
                         logger.warning(
                             f"Did not expect these keys {unexpected_keys} in checkpoint. Ignoring."
                         )
+                    logger.info(f"Loaded {name}")
                 else:
                     # If module is not an nn.Module, try to load as one piece
-                    logger.info(f"Loaded {name}")
                     mod.load_state_dict(saved_state_dict[name])
-
+                    logger.info(f"Loaded {name}")
             # KeyError is raised if the module was not present in the last run but is being
             # accessed in the saved_state_dict.
             # ValueError is raised by the optimizer's load_state_dict if the parameters have
