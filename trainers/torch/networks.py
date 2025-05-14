@@ -950,8 +950,8 @@ class SplitValueSharedActorCritic(SimpleActor, Critic):
         importance_weights = self.importance_network([inputs[0]])[0]
         importance_weights = F.softmax(importance_weights, dim=1)
         #print(f'importance_weights: {importance_weights}')
-        for i in range(importance_weights.shape[0]):
-            print(f'importance_weights[{i}]: {importance_weights[i]}')
+        # for i in range(importance_weights.shape[0]):
+        #     print(f'importance_weights[{i}]: {importance_weights[i]}')
         encoding_position, memories_out = self.position_network(
             inputs_position, memories=memories, sequence_length=sequence_length
         )
